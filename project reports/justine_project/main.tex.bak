@@ -1,0 +1,1013 @@
+\documentclass[a4paper,12pt]{report}
+\usepackage{fontspec} % Handles fonts in XeLaTeX. Replaces inputenc and fontenc.
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue]{hyperref} % Made links active
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{wrapfig}
+\usepackage{subcaption} % Modern replacement for 'subfigure'
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{csquotes}
+\usepackage{ragged2e}
+\usepackage{lipsum}
+\usepackage{pdfpages}
+\usepackage{amsmath}
+\usepackage{amssymb} % For math symbols
+\usepackage[acronym]{glossaries} % For automatic abbreviations
+\usepackage{tocloft}
+\usepackage{cite}
+\usepackage{float}
+\usepackage{bibentry}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{comment}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{makecell}% provides \makecell
+\usepackage{array}% for >{\raggedright\arraybackslash}X
+
+% --- ADDED: Acronym Definitions ---
+% Since I don't have your 'glossary.tex' file, I have defined the
+% acronyms found in your document here.
+\newacronym{cnn}{CNN}{Convolutional Neural Network}
+\newacronym{lstm}{LSTM}{Long Short-Term Memory}
+\newacronym{stalta}{STA/LTA}{Short-Term Average/Long-Term Average}
+\newacronym{mfcc}{MFCC}{Mel-Frequency Cepstral Coefficient}
+\newacronym{eew}{EEW}{Earthquake Early Warning}
+\newacronym{ml}{ML}{Machine Learning}
+\newacronym{dl}{DL}{Deep Learning}
+\newacronym{snr}{SNR}{Signal-to-Noise Ratio}
+\newacronym{fft}{FFT}{Fast Fourier Transform}
+\newacronym{stft}{STFT}{Short-Time Fourier Transform}
+\newacronym{dct}{DCT}{Discrete Cosine Transform}
+\newacronym{pesmos}{PESMOS}{Program for Excellence in Strong Motion Studies}
+\newacronym{egmb}{EGMB}{Eastern Ghats Mobile Belt}
+\newacronym{awg}{AWG}{Arbitrary Waveform Generator}
+% --- End of Acronyms ---
+
+
+% Create the glossary
+\makeglossaries
+
+% --- Customizations for ToC, LoF, LoT (Remove dot leaders) ---
+\renewcommand{\cftchapleader}{\hfil} % Removes dots for chapters in ToC
+\renewcommand{\cftsecleader}{\hfil}% Removes dots for sections in ToC
+\renewcommand{\cftsubsecleader}{\hfil}% Removes dots for subsections in ToC
+\renewcommand{\cftfigleader}{\hfil}% Removes dots for figures in LoF
+\renewcommand{\cfttableader}{\hfil}% Removes dots for tables in LoT
+
+% Keep your existing ToC/LoF customizations
+\renewcommand{\cfttoctitlefont}{\centering\Huge\bfseries\color{blue}}
+\renewcommand{\cftsecfont}{\normalfont}
+\renewcommand{\cftsubsecfont}{\normalfont}
+\renewcommand{\cftsubsubsecfont}{\normalfont}
+\setlength{\cftbeforetoctitleskip}{0pt}
+\setlength{\cftbeforesubsecskip}{0pt}
+
+% For the list of figures
+\renewcommand{\listfigurename}{List of Figures}
+\renewcommand{\cftloftitlefont}{\centering\Large\bfseries\color{blue}}
+
+% For the list of tables (add this if you haven't already)
+\renewcommand{\listtablename}{List of Tables}
+\renewcommand{\cftlottitlefont}{\centering\Large\bfseries\color{blue}}
+% --- End Customizations ---
+
+% --- NEW: Replicating your manual chapter/section style ---
+% This makes \chapter{} look like your manual formatting
+\titleformat{\chapter}[display]
+{\normalfont\Large\bfseries\centering} % Format for the whole block
+{\chaptertitlename\ \thechapter} % "CHAPTER X"
+{0.2cm} % Space between "CHAPTER X" and title
+{\Large\textbf} % Format for the title text
+\titlespacing*{\chapter}{0pt}{0pt}{0.5cm} % left, before, after
+
+% This makes \section{} look like your manual formatting
+\titleformat{\section}
+{\normalfont\fontsize{14pt}{12pt}\selectfont\bfseries} % Format
+{\thesection} % Number (e.g., "4.1")
+{1em} % Space after number
+{} % Code before title
+
+% This makes \subsection{} look like your manual formatting
+\titleformat{\subsection}
+{\normalfont\fontsize{13pt}{12pt}\selectfont\bfseries} % Format
+{\thesubsection} % Number (e.g., "2.1.1")
+{1em} % Space after number
+{} % Code before title
+% --- END OF NEW FORMATTING ---
+
+% --- ADDED: Remove paragraph indentation globally ---
+\setlength{\parindent}{0pt}
+% ---
+
+\begin{document}
+\include{cover}
+\include{cover}
+\include{certificate}
+
+% --- CORRECTED FRONT MATTER ---
+\pagenumbering{roman} % Start roman numerals
+\vspace{2cm}
+
+% --- Abstract and Acknowledgement are correct ---
+\chapter*{DECLARATION}
+\addcontentsline{toc}{chapter}{\textit{Declaration}} % This adds it to the ToC
+\vspace{1cm}
+
+\fontsize{12pt}{18pt}\selectfont
+We hereby declare that this report entitled \textbf{\enquote {SEISMIC DETECTION, VISUALIZATION AND ANALYSIS}} is a bonafide record of the preliminary project work carried out by us under the supervision of \textbf{Prof. Josmy George} in the Department of Computer Science and Engineering, Mar Baselios Christian College of Engineering and Technology, Peermade. The project proposal presented in this report has not been presented for the award of any other degrees.\\
+\\
+Peermade \\
+\\
+Date: 25 October 2025 \\
+\\
+\\
+\\
+\\
+\begin{spacing}{1}
+	
+	\begin{table}[h!]
+		\centering
+		\begin{tabular}{p{0.5cm} p{6cm} p{10cm}}
+\textbf{} && \textbf{ALLAN SHIBU(MBC22CS016)} \\[0.3cm]
+\textbf{} && \textbf{BIJUIN BINOY MATHEW(MBC22CS026)} \\[0.3cm]
+\textbf{} && \textbf{JUSTINE BIJU PAUL(MBC22CS044)} \\[0.3cm]
+			\textbf{} && \textbf{NISSA ANN SAJI(MBC22CS053)} \\[0.3cm]
+		\end{tabular}
+	\end{table}
+\end{spacing}
+\newpage
+
+\chapter*{ACKNOWLEDGEMENT}
+\addcontentsline{toc}{chapter}{\textit{Acknowledgement}} % This adds it to the ToC
+\vspace{1cm}
+
+\fontsize{12pt}{18pt}\selectfont
+
+
+The success of this project was made possible through the guidance and support of many. We 
+are grateful to the Management of Mar Baselios Christian College of Engineering and Technology for the opportunity and platform to complete this work. Special thanks to our 
+Principal, \textbf{Dr.V I George, Principal}, for his exceptional support and the facilities provided. We deeply appreciate the supervision and assistance we received, which were crucial to the project's completion.  \\
+\\
+We are extremely indebted to our Head of the Department, \textbf{Dr. Ushus Maria Joseph, Associate Professor} Department of Computer Science and Engineering, for her valuable suggestions and encouragement during the course of our project work. \\
+\\
+We are grateful to thank our project coordinator, \textbf{Prof. Aryalakshmi R}, Assistant Professor, Department of Computer Science and Engineering for her valuable support. \\
+\\
+We are deeply grateful to our project guide, \textbf{Prof. Josmy George}, Associate Professor, Department of Computer Science and Engineering, for her keen interest and guidance throughout our project, providing essential information for a successful presentation. We also appreciate the constant encouragement, support, and guidance from all the faculty members of the Department of Computer Science and Engineering, which were instrumental in completing our project work successfully. \\
+\vspace{1cm}
+
+\begin{spacing}{1}
+	
+	\begin{table}[h!]
+		\centering
+		\begin{tabular}{p{0.5cm} p{6cm} p{10cm}}
+\textbf{} && \textbf{ALLAN SHIBU(MBC22CS016)} \\[0.3cm]
+\textbf{} && \textbf{BIJUIN BINOY MATHEW(MBC22CS026)} \\[0.3cm]
+\textbf{} && \textbf{JUSTINE BIJU PAUL(MBC22CS044)} \\[0.3cm]
+			\textbf{} && \textbf{NISSA ANN SAJI(MBC22CS053)} \\[0.3cm]
+		\end{tabular}
+	\end{table}
+\end{spacing}
+\newpage
+
+% --- Abstract and Acknowledgement are correct ---
+\chapter*{ABSTRACT}
+\addcontentsline{toc}{chapter}{\textit{Abstract}} % This adds it to the ToC
+\vspace{1cm}
+
+\fontsize{12pt}{18pt}\selectfont
+Earthquake signals are non-stationary in nature and thus in real-time, it is difficult to identify and classify events based on classical approaches like peak ground displacement, peak ground velocity. Even the popular algorithm of STA/LTA requires extensive research to determine basic thresholding parameters so as to trigger an alarm. Also, many times due to human error or other unavoidable natural factors such as thunder strikes or landslides, the algorithm may end up raising a false alarm. This work focuses on detecting earthquakes by converting seismograph recorded data into corresponding audio signals for better perception and then uses popular Speech Recognition techniques of Filter bank coefficients and Mel Frequency Cepstral Coefficients (MFCC) to extract the features. These features
+were then used to train a Convolutional Neural Network(CNN) and a Long Short Term Memory
+(LSTM) network. The proposed method can overcome the above-mentioned problems and help in
+detecting earthquakes automatically from the waveforms without much human intervention. For the 1000Hz audio data set the CNN model showed a testing accuracy of 91.1\% for 0.2-second samplewindow length while the LSTM model showed 93.99\% for the same. A total of 610 sounds consisting of 310 earthquake sounds and 300 non-earthquake sounds were used to train the models. While testing, the total time required for generating the alarm was 1.68 seconds which included individual times for data collection, processing, and prediction. Taking into consideration the processing and prediction delays, the total time is thus considered to be approximately 2 seconds. This shows the effectiveness of the proposed method for EEW applications. Since the input of the method is only the waveform, it is suitable for real-time processing, thus, the models can very well be used also as an onsite earthquake early warning system requiring a minimum amount of preparation time and workload.
+
+\newpage
+% --- ToC, LoF, LoT (Manual entry required due to 'tocloft') ---
+
+% Add "Contents" to the ToC, THEN print the ToC
+\addcontentsline{toc}{chapter}{\textit{Contents}}
+\tableofcontents
+
+% Add "List of Figures" to the ToC, THEN print the LoF
+\addcontentsline{toc}{chapter}{\textit{List of Figures}}
+\listoffigures
+\newpage
+
+
+\vspace{0.5cm}
+\pagenumbering{arabic}
+
+\chapter{INTRODUCTION}
+\label{chap:lit_survey}
+\vspace{0.2cm}
+
+{\fontsize{12pt}{18pt}\selectfont
+The field of seismology, particularly in the domain of disaster mitigation, is undergoing rapid transformation driven by the integration of advanced technology, especially deep learning (DL) methods. This introduction outlines the critical importance of Earthquake Early Warning (EEW) systems, details the shift from conventional monitoring techniques to modern deep learning approaches, and explores the diverse and increasingly sophisticated applications of DL in seismic detection, phase picking, event location, and specialized signal classification across various seismic environments.
+}
+
+\vspace{0.6cm}
+\section{The Mandate and Constraints of Earthquake Early Warning Systems}
+\label{sec:1.1}
+\vspace{0.2cm}
+
+{\fontsize{12pt}{18pt}\selectfont
+Earthquake Early Warning (EEW) systems serve as vital life-saving tools in earthquake-prone regions globally, encompassing countries such as Japan, Taiwan, Mexico, and South Korea. The primary objective of EEW is multifaceted: to provide necessary information to warn the public and inform response actions; to deliver actionable messages leading to safety for populations at risk of imminent threats; and crucially, to minimize response delay.
+
+The urgency inherent in EEW stems from the narrow temporal window available for intervention. Typically, only a matter of seconds separates the initial detection of an earthquake's onset from the arrival of strong, damaging shaking at a target site. While a warning period measured in minutes or hours is generally unachievable, the brief seconds of lead time provided by EEW systems can nonetheless be invaluable for mitigating risk. These seconds enable individuals to take protective actions, such as moving to safer spots within a building or taking proper shelter. Consequently, reducing the lead-time of EEW alerts is a central focus of research. The efficacy of an EEW system relies heavily on the rapidity and reliability of its decision-making process, which is considered more important than the mere transmission of information. Operational considerations also involve managing the alert propagation system, deciding on the system settings for alerts, and ensuring the content of the message is actionable.
+
+The Korea Meteorological Administration (KMA), for instance, operates a network-based EEW service but has recognised the limitations of this traditional technology in achieving sufficiently short warning times and has therefore begun trial testing an on-site warning method.
+}
+
+\newpage
+\vspace{0.6cm}
+\section{Evolution of Seismic Signal Detection: From Traditional Methods to Deep Learning}
+\label{sec:1.2}
+\vspace{0.2cm}
+
+{\fontsize{12pt}{18pt}\selectfont
+Historically, seismic monitoring systems relied on classical algorithms for detecting the onset of seismic phases. The most widely adopted conventional approach is the Short-Term Average/Long-Term Average (STA/LTA) method, which functions as a power detector. STA/LTA identifies the onset of an earthquake as a sudden change in the ratio between the short-term and long-term amplitude averages of the waveform. While robust, the practical application of STA/LTA in an operational environment, such as an on-site EEW system, demands extensive prerequisites. It requires advance analysis of ambient noise and site-specific structural vibration, along with the tedious process of optimizing threshold values via multiple trials and errors to keep false detections at a minimum. The performance of the STA/LTA algorithm is heavily dependent on having appropriate user-defined thresholds, which must often be customised for different regions.
+
+The exponential growth in seismic data volume, coupled with the rising demand for comprehensive earthquake catalogs, particularly for small or induced events, has necessitated the adoption of automatic detection methods. This need, combined with rapid advancements in Artificial Intelligence (AI), has led to the prominent incorporation of Deep Learning (DL) into seismology.
+
+DL models offer significant advantages over conventional methods. By learning general characteristics of earthquake waveforms from high-level representations, they achieve robust and efficient feature extraction. Importantly, DL networks are capable of automatic feature extraction directly from raw data, eliminating the need for manual feature engineering or specific domain expertise. Furthermore, these networks can exhibit invariance to minor variations in the timing or position of event occurrences. These capabilities allow DL-based seismic phase detection methods to often outperform traditional counterparts.
+
+\vspace{0.2cm}
+Key architectural components frequently employed in seismological DL models include:
+\begin{itemize}
+\item \textbf{Convolutional Neural Networks (CNNs):} CNNs are widely used for earthquake detection and location tasks, capitalizing on their ability to extract relevant features through convolutional layers. CNNs implicitly capture contextual information through multiple levels of abstraction, making them highly effective at detecting local features within multi-dimensional data.
+\item \textbf{Recurrent Neural Networks (RNNs) and Long Short-Term Memory (LSTM):} RNNs, particularly those employing Gated Recurrent Units (GRU) or LSTM blocks, are specialized for modeling sequential time-series data. LSTM blocks specifically manage the complexity of long sequences by integrating memory cells and gate mechanisms (input, output, and forget gates), enabling them to capture long-term dependencies in seismic signals.
+\item \textbf{Attention Mechanisms and Transformers:} Advanced architectures, such as the Earthquake Transformer (EQT), incorporate attention mechanisms. Attention allows the network to dynamically weight different parts of the seismic sequence based on their relevance to the classification task, focusing on crucial local features while processing the global waveform context.
+\end{itemize}
+\vspace{0.2cm}
+
+The successful training of these sophisticated models relies on vast, high-quality, labelled datasets. Major initiatives have led to the creation of globally distributed datasets, such as the STanford EArthquake Dataset (STEAD) and the Italian Seismic Data set For Machine Learning (INSTANCE). For instance, STEAD comprises about 1.2 million signals, including both local earthquake waveforms (from various geographic regions) and non-earthquake noise, typically 1-minute long at a 100 Hz sampling rate, recorded at epicentral distances up to 300 km.
+}
+\vspace{0.6cm}
+\section{Advanced Deep Learning Applications in Seismology}
+\label{sec:1.3}
+\vspace{0.2cm}
+
+{\fontsize{12pt}{18pt}\selectfont
+Deep learning models are being deployed to address core seismological tasks with unprecedented efficiency and scope, ranging from microseismic monitoring to real-time earthquake characterization.
+}
+
+\vspace{0.6cm}
+\subsection{Phase Picking and Discrimination}
+\label{sec:1.3.1}
+\vspace{0.2cm}
+
+{\fontsize{12pt}{18pt}\selectfont
+Reliable phase picking, identifying the arrival times of P- and S-waves, is a fundamental prerequisite for all automatic monitoring pipelines, as it allows for the association of detections with specific events and subsequent location determination.
+
+\vspace{0.2cm}
+Leading DL models for phase picking include:
+\begin{itemize}
+\item \textbf{PhaseNet:} A deep-neural-network-based seismic arrival-time picking method utilizing a U-Net architecture.
+\item \textbf{EQTransformer (EQT):} An attentive deep-learning model designed for simultaneous earthquake detection and phase picking. EQT operates as a multi-task network, featuring one deep encoder and three distinct decoders dedicated to predicting the existence of an earthquake signal, P-phase arrival, and S-phase arrival probabilities. It employs a hierarchical structure with both global attention (for identifying the earthquake signal in the time series) and local attention (for identifying seismic phases within the signal).
+\item \textbf{TPhaseNet:} A modification of the PhaseNet architecture developed specifically for regional seismic records, incorporating transformers and an increased number of down-sampling blocks to handle the longer input time windows characteristic of regional events. TPhaseNet aims to improve prediction accuracy for events occurring at regional distances, which are typically beyond a few hundred kilometers from the sensor.
+\end{itemize}
+\vspace{0.2cm}
+
+Beyond basic picking, DL excels at classifying signals, particularly distinguishing genuine earthquakes ("quake") from impulsive nuisance signals ("noise") in real-time EEW systems. Studies show that models like CNNs and Generative Adversarial Network/Random Forest (GAN+RF), which utilize raw waveform data directly, yield superior precision and recall compared to models relying solely on pre-computed features. Furthermore, specific DL approaches, like the GL model, are designed to enhance robustness by combining global waveform representation analysis with local representations (e.g., separating the first and second halves of the waveform), which helps prevent misclassification when data is partially contaminated by noise.
+}
+
+\vspace{0.6cm}
+\subsection{Addressing Specialized Seismological Challenges}
+\label{sec:1.3.2}
+\vspace{0.2cm}
+
+{\fontsize{12pt}{18pt}\selectfont
+The flexibility of DL allows its application to highly specialized datasets and challenging operational environments:
+\begin{enumerate}
+\item \textbf{On-site and Edge Computing:} For EEW systems relying on low-cost sensors or embedded IoT devices, the computational burden of models like EQT (which has a large number of parameters) can be prohibitive. Lightweight DL models, such as LEQNet, have been developed to address this. LEQNet drastically reduces model size (e.g., parameter count reduced by 88\% compared to EQT) while maintaining high performance. This optimization is achieved through techniques like depthwise separable CNN, recurrent CNN layers (for parameter reuse), and deeper bottleneck architecture.
+\item \textbf{Ocean Bottom Seismometers (OBS) Data:} DL models are adapted for OBS environments, which are typically noisier than land stations. OBSTransformer (OBST) leverages transfer learning from a land-based model (EQT) and uses automatically labelled data collected from temporary OBS deployments worldwide. Notably, OBST utilized real OBS noise samples for data augmentation instead of the more common
+\end{enumerate}
+}
+\newpage
+
+% --- CHAPTER 2 ---
+% Replaced manual \begin{center} with \chapter{}
+\chapter{LITERATURE SURVEY}
+\label{chap:lit_survey}
+
+% Replaced manual font sizing with \section{} and \subsection{}
+\section{A NOVEL APPROACH FOR EARTHQUAKE EARLY WARNING SYSTEM DESIGN USING DEEP LEARNING TECHNIQUES}
+\label{sec:2.1}
+\textbf{Authors}: Tonumoy Mukherjee, Chandrani Singh and Prabir Kumar Biswas\\
+\\
+\textbf{Summary}\\
+This study proposes an EEWS using deep learning (CNN/LSTM) to classify earthquake signals. It addresses the unreliability of the traditional \textbf{STA/LTA algorithm} by converting seismic waveforms into audio signals and extracting features using speech recognition techniques (\textbf{MFCCs} and \textbf{Filter Banks}). The methodology aims to reduce false alarms and eliminate the need for manually tuning regional thresholds, using data upsampled to 1000Hz for clearer signal capture.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Improved Warning Speed}: Generates alarms faster (CNN: $\approx$2s, LSTM: $\approx$2.5s) than the $\approx$3-second delay of the standard STA/LTA algorithm.
+\item \textbf{High Accuracy with Low Constraints}: Achieves high accuracy (93.99\% with LSTM) without needing user-defined, region-dependent thresholds.
+\item \textbf{Automatic Feature Extraction}: Automatically extracts features, making it suitable for real-time, onsite EEW with minimal setup or domain expertise.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Slightly Lower Peak Accuracy}: The peak accuracy (93.99\%) is marginally lower than the *conditional* accuracy of a perfectly tuned STA/LTA (95.43\%).
+\item \textbf{Computational Cost}: The more accurate LSTM model is computationally more expensive and slower (2.5s) than the CNN model (2.0s).
+\item \textbf{Data and Feature Complexity}: Relies on a small dataset (610 sounds) and requires upsampling data (200Hz to 1000Hz) and complex speech-recognition feature extraction.
+\end{itemize}
+
+\section{EARTHQUAKE EARLY WARNING AND REALTIME EARTHQUAKE DISASTER PREVENTION}
+\label{sec:2.2}
+\textbf{Authors}: Yutaka Nakamura\\
+\\
+\textbf{Summary}\\
+This paper reviews the foundational concepts and presentation of the Urgent Earthquake Detection and Alarm System (UrEDAS), first introduced in 1988. It highlights the system's core goal: rapidly detecting the initial P-wave to issue warnings before strong ground shaking occurs, thereby mitigating disaster from both earthquakes and tsunamis. The work traces the evolution of UrEDAS and its contribution to real-time hazard information, vulnerability estimation, and public safety.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Disaster and Tsunami Mitigation}: Provides a comprehensive approach by focusing on mitigating disasters from both earthquakes and subsequent tsunamis.
+\item \textbf{Foundational Contribution}: Pioneered real-time hazard information systems and introduced concepts for earthquake vulnerability estimation.
+\item \textbf{Public Safety Focus}: Established a framework for operational EEW systems focused on public safety and minimizing response delay, which has proven effective in reducing casualties.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Inherent Time Constraint}: The system is fundamentally limited to providing only a few seconds of warning time, unlike flood or typhoon forecasts.
+\item \textbf{Vulnerability to False Alarms}: EEW systems in general face a significant societal challenge from false alarms, which can cause panic and reduce public trust.
+\item \textbf{Technological Evolution}: The foundational technology (pre-AI) and traditional algorithms (like STA/LTA) struggle with low Signal-to-Noise Ratio (SNR) data and distinguishing complex seismic events.
+\end{itemize}
+
+\section{STABLE OPERATION PROCESS OF EARTHQUAKE EARLY WARNING SYSTEM BASED ON MACHINE LEARNING}
+\label{sec:2.3}
+\textbf{Authors}: Jae-Kwang Ahn, Euna Park, Byeonghak Kim, Eui-Hong Hwang and Seongwon Hong\\
+\\
+\textbf{Summary}\\
+This paper details a stable operational process for a Machine Learning (ML) based on-site EEW system in Korea (KOS EEW). It focuses on an ML-Filter (MLF) designed to accurately detect the initial P-wave within 2 seconds. The study addresses critical ML challenges, such as severe data imbalance (only 2.6\% earthquake data) and overfitting, which were solved by augmenting the dataset and reconstructing the loss function with L2 regularization.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{High P-wave Detection Accuracy}: The optimized MLF achieved a high P-wave detection accuracy of 98.65\% within 2 seconds of arrival.
+\item \textbf{ML Troubleshooting}: Successfully addresses common ML pipeline problems (overfitting, data imbalance) using L2 regularization and data augmentation.
+\item \textbf{Groundbreaking Operational Testing}: Provides a rare case study on the real-time operational testing of an on-site, ML-based warning technology in Korea.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Risk of False Alarms}: False alarms remain a critical societal challenge for all EEW systems, requiring high reliability.
+\item \textbf{Model and Data Limitations}: The ML model's performance depends heavily on the training data, which may not represent future seismic events or complex wave propagation effects.
+\item \textbf{Operational Status}: Despite promising trial tests, no public on-site AI-based EEW service is fully operational yet.
+\end{itemize}
+
+\section{A REVIEW ON THE DEVELOPMENT OF EARTHQUAKE WARNING SYSTEM USING LOW-COST SENSORS IN TAIWAN}
+\label{sec:2.4}
+\textbf{Authors}: Yih-Min Wu and Himanshu Mittal\\
+\\
+\textbf{Summary}\\
+This paper reviews Taiwan's EEW system, which is distinguished by its use of a dense network of low-cost P-Alert sensors. The system generates near-real-time shakemaps (showing Peak Ground Acceleration) once a minimum threshold of sensors is triggered (five instruments $\geq$1.5 gal). These maps are distributed to disaster management agencies (NCDR) and the public via social media to aid in damage assessment and response.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Real-Time Shakemap Generation}: Provides life-saving warning time (seconds) and generates near-real-time shakemaps for detailed damage assessment.
+\item \textbf{Cost-Effectiveness and Density}: The use of low-cost sensors allows for a dense network, improving shakemap precision without extensive interpolation.
+\item \textbf{Disaster Management Integration}: Shakemaps are integrated directly with disaster response (NCDR) and distributed publicly via social media.
+\item \textbf{Emergency Operational Control}: P-Alert instruments include relays, allowing for remote emergency control of devices.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Limited Warning Duration}: Warning time is limited to seconds, and the detailed shakemaps have a 30-second update lag after the initial trigger.
+\item \textbf{Trigger Threshold Dependency}: System activation depends on a minimum threshold (five P-Alert instruments) recording a specific PGA ($\geq$1.5 gal).
+\end{itemize}
+
+\section{DEEP LEARNING FOR IDENTIFYING EARTHQUAKE PRECURSORS: APPLICATIONS AND CHALLENGES IN SUBSURFACE FLUID SIGNALS}
+\label{sec:2.5}
+\textbf{Authors}: Bingfei Chu, Yan Zhang, Liyun Fu, Shengwen Qi, Gaoxiang Chen, Zheming Shi, Tianming Huang, Zhonghe Pang and Huai Zhang\\
+\\
+\textbf{Summary}\\
+This research explores using deep learning to identify earthquake precursors from subsurface fluid monitoring data. It addresses the primary challenges of data integration and the lack of labeled data by proposing unsupervised learning. The methodology is based on segmenting data into seismically inactive (training) and active (testing) periods. The long-term goal is to build a large, comprehensive model (akin to Chat-GPT) using self-supervised learning on a future catalog of fluid precursor data.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Novel Precursor Detection}: Provides a new approach to precursor identification by applying deep learning to subsurface fluid data.
+\item \textbf{Addresses Data Scarcity}: Proposes using unsupervised learning to overcome the critical challenge of lacking labeled data.
+\item \textbf{Future Scalability}: Outlines a scalable future framework using large models and self-supervised learning for comprehensive, real-time monitoring.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Exploratory Stage}: The application of deep learning to subsurface fluid data for earthquake prediction is still in its nascent, exploratory stage.
+\item \textbf{Lack of Labelled Data}: The methodology is critically hindered by the current lack of explicitly labeled fluid data and high levels of data noise.
+\item \textbf{Dependence on Catalog Development}: The system's full potential depends on the future creation of a comprehensive, human-assisted precursor catalog.
+\end{itemize}
+
+\section{A DEEP NEURAL NETWORK TO IDENTIFY FORESHOCKS IN REAL TIME}
+\label{sec:2.6}
+\textbf{Authors}: K.Vikraman\\
+\\
+\textbf{Summary}\\
+This study proposes an EEW design that converts seismic data into audio signals to apply speech recognition techniques (MFCCs, Filter banks) for feature extraction. It trains both CNN and LSTM models to classify "earth sounds" and identify events, addressing the false alarm and thresholding issues of the traditional STA/LTA algorithm. The models were trained on a small, custom dataset (610 sounds) upsampled to 1000 Hz.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Superior Accuracy and Speed}: Generates alarms faster (CNN: $\approx$2s, LSTM: $\approx$2.5s) than the standard STA/LTA algorithm ($\approx$3s).
+\item \textbf{Reduced False Alarms}: Eliminates the need for user-defined thresholds, reducing false alarms from environmental noise (e.g., thunder).
+\item \textbf{Versatility and Extensibility}: Models can potentially be "tweaked" to estimate other parameters (magnitude, velocity) or classify other types of sound signatures.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Dependency on Custom Data}: Success depended on creating a small, custom dataset (610 sounds), as no existing dataset was suitable.
+\item \textbf{Generalization/Overfitting Concern}: A notable gap between training (98.6\%) and validation (92.4\%) accuracy suggests overfitting and the need for data augmentation.
+\item \textbf{Ambiguity between Event Types}: Analysis showed that foreshocks and aftershocks possess common properties, making them difficult to distinguish with this method.
+\end{itemize}
+
+\section{EARTHQUAKE TRANSFORMER—AN ATTENTIVE DEEP LEARNING MODEL FOR SIMULTANEOUS EARTHQUAKE DETECTION AND PHASE PICKING}
+\label{sec:2.7}
+\textbf{Authors}: S. Mostafa Mousavi, William L. Ellsworth, Weiqiang Zhu, Lindsay Y. Chuang and Gregory C. Beroza\\
+\\
+\textbf{Summary}\\
+This study introduces \textbf{EQTransformer (EQT)}, a deep learning model for simultaneous earthquake detection and P/S phase picking from single-station data. The architecture uses a deep network with residual connections, LSTMs, and a hierarchical \textbf{attention mechanism} to integrate global and local waveform features. Trained on the large-scale global \textbf{STEAD dataset}, EQT demonstrated superior performance compared to five other deep-learning pickers and three traditional auto-pickers.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Simultaneous Multi-Task Performance}: Simultaneously performs detection and phase picking, improving both tasks by integrating waveform and phase information.
+\item \textbf{High Accuracy and Precision}: Achieves high F1-scores ($>$0.98) and precision comparable to manual human analysis (mean error near 0.00s).
+\item \textbf{Robustness and Generalization}: Demonstrates strong generalization to different regions and robustness against noisy waveforms due to training on the global STEAD dataset.
+\item \textbf{Computational Efficiency in Operation}: While training is long ($\approx$89 hours), it is significantly faster during operation ($\approx$2.5 hours) than traditional pickers (31-62 hours) on the same large test set.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{S-wave Picking Challenges}: S-wave picking remains inherently more difficult and shows less improvement than P-wave picking.
+\item \textbf{Training Time/Resource Demand}: The deep, complex architecture requires significant computational resources and time ($\approx$89 hours) for training.
+\item \textbf{Noise Correlation}: Prediction errors appear to correlate with the background noise level.
+\end{itemize}
+
+\section{RELIABLE REAL-TIME SEISMIC SIGNAL/NOISE DISCRIMINATION WITH MACHINE LEARNING }
+\label{sec:2.8}
+\textbf{Authors}: Men-Andrin Meier, Zachary E. Ross, Anshul Ramachandran, Ashwin Balakrishna, Suraj Nair, Peter Kundzicz, Zefeng Li, Jennifer Andrews, Egill Hauksson and Yisong Yue\\
+\\
+\textbf{Summary}\\
+This research addresses the high rate of false triggers in EEW systems (like ShakeAlert) by developing and evaluating ML classifiers for reliable signal/noise discrimination. Using a large dataset from California and Japan, deep learning models (CNN, GAN+RF, FCNN) were trained. The CNN model, using raw waveforms, demonstrated superior performance, reducing false positives by over 99.5\% compared to the conventional OnSite classifier, especially for high-confidence false triggers.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Significant Reduction in False Positives (FP)}: The CNN model dramatically reduced FPs, identifying only 356 cases (0.48\%) on a 75,000-record noise set, compared to over 34,000 non-zero triggers from the conventional OnSite classifier.
+\item \textbf{High Reliability}: Successfully avoided $>$99.5\% of high-confidence false triggers, which are the most problematic for public alerts.
+\item \textbf{Speed in Real-Time Operation}: The models are extremely fast in real-time operation (e.g., FCNN prediction time of 3.09e-5 seconds).
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Residual Errors}: Deep classifiers still showed some errors, particularly on noise records where the traditional classifier was erroneously (but highly) confident.
+\item \textbf{Need for Separate Teleseismic Classifier}: A separate, second classifier had to be designed specifically to screen out teleseismic signals, which the primary models struggled to differentiate.
+\end{itemize}
+
+\section{GRONINGENNET: DEEP LEARNING FOR LOW-MAGNITUDE EARTHQUAKE DETECTION ON A MULTI-LEVEL SENSOR NETWORK}
+\label{sec:2.9}
+\textbf{Authors}: Ahmed Shaheen, Umairbin Waheed, Michael Fehler, Lubos Sokol and Sherif Hanafy\\
+\\
+\textbf{Summary}\\
+This research proposes GroningenNet, a CNN-based deep learning method for detecting low-magnitude earthquakes using a multi-level sensor network in Groningen. The CNN architecture avoids manual feature engineering and is specifically trained to leverage the multi-level sensor data. It discriminates subsurface events from surface noise by recognizing distinct moveout patterns recorded at the borehole sensors.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Superior Detection Precision}: Achieved significantly higher precision (88.9\%) compared to conventional STA/LTA (67\%) and Template Matching (69.39\%).
+\item \textbf{Effective Noise Discrimination}: Effectively uses multi-level sensor data (moveout patterns) to distinguish true subsurface events from local surface noise.
+\item \textbf{Real-Time and Automatic}: Operates in real-time (post-training) and avoids the tedious manual feature engineering required by traditional methods.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Inability to Detect Events in High Noise}: The model cannot detect events buried in high noise, as its training data only included visually-confirmed events.
+\item \textbf{Threshold Dependency}: False alarms were concentrated at the minimum detection threshold (two stations), requiring a higher threshold or manual verification to maintain accuracy.
+\end{itemize}
+
+\section{DEEP LEARNING MODELS FOR REGIONAL PHASE DETECTION ON SEISMIC STATIONS IN NORTHERN EUROPE AND THE EUROPEAN ARCTIC}
+\label{sec:2.10}
+\textbf{Authors}: Erik B. Myklebust and Andreas Köhler\\
+\\
+\textbf{Summary}\\
+This study introduces TPhaseNet, a new deep learning architecture designed specifically for detecting and classifying \textbf{regional seismic phases} (from distant events), which are challenging due to long time windows (5 minutes). TPhaseNet modifies the U-Net-based PhaseNet by increasing the down-sampling blocks and, crucially, adding \textbf{transformer blocks}. Trained on a new regional dataset from Northern Europe, TPhaseNet outperformed PhaseNet and EQTransformer on all metrics for this specific task.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Superior Performance on Regional Events}: Consistently outperformed state-of-the-art models (PhaseNet, EQTransformer) on regional event data using long time windows.
+\item \textbf{Highly Accurate Arrival Picking}: Achieved a $>$50\% reduction in P and S residuals compared to PhaseNet, indicating superior picking accuracy.
+\item \textbf{Novel Architecture}: The novel integration of transformer blocks proved effective for handling the complex patterns in long-duration regional records.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Increased Computational Cost}: Transformer-based models (TPhaseNet, EQTransformer) are computationally expensive, requiring significantly more training time (15.5-17 hrs) than simpler models (PhaseNet, 4 hrs).
+\item \textbf{Data Imbalance Challenges}: The model's performance dropped for underrepresented long distances, a result of data imbalances in the regional training set.
+\item \textbf{Baseline Model Failure}: The baseline EQTransformer model performed very poorly on this regional task, suggesting its architecture is less suitable for regional distances.
+\end{itemize}
+
+\section{SMALL EARTHQUAKE LOCATION VIA MACHINE LEARNING WITH INSUFFICIENT DATA}
+\label{sec:2.11}
+\textbf{Authors}: Ji Zhang, Aitaro Kato, Huiyu Zhu and Jie Zhang\\
+\\
+\textbf{Summary}\\
+This research proposes a multi-step deep learning system for locating small earthquakes using a \textbf{single station}. The system uses two specialized networks: \textbf{DisNet} (a ResNet/LSTM hybrid) to predict epicentral distance and \textbf{AziNet} (a C-block/LSTM/Res-block hybrid with multi-scale fusion) to predict back-azimuth. The models were pre-trained on the global STEAD dataset and then fine-tuned using transfer learning on regional data (Sichuan-Yunnan).
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Single-Station Location}: Provides a method for earthquake location, crucial for scenarios where station coverage is insufficient.
+\item \textbf{High Accuracy in Distance Prediction}: DisNet (distance) achieved high accuracy, improving from 11 km MAE (global) to 5.0 km MAE after regional transfer learning.
+\item \textbf{Robust Architecture}: The architecture uses robust designs, including Res-blocks for network depth, LSTMs for temporal features, and multi-scale fusion (in AziNet).
+\item \textbf{Improved Generalization}: Pre-training on the large STEAD dataset improved generalization and reduced overfitting.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Significant Challenge in Back-Azimuth}: Back-azimuth prediction (AziNet) proved highly challenging, yielding a very poor MAE of 55 degrees even after transfer learning.
+\item \textbf{Poor Performance on Near-Field Events}: The system struggles with small/near-field events, showing a relative distance error $>$25\% for distances $<$20 km.
+\item \textbf{Event Distinction}: It is difficult to distinguish between multiple events that occur closely in time or space.
+\item \textbf{Requires Transfer Learning}: Models trained on global data require regional re-training (transfer learning) to produce reliable results.
+\end{itemize}
+
+\section{OBSTRANSFORMER: A DEEP-LEARNING SEISMIC PHASE PICKER FOR OBS DATA USING AUTOMATED LABELLING AND TRANSFER LEARNING}
+\label{sec:2.12}
+\textbf{Authors}: Alireza Niksejel and Miao Zhang1\\
+\\
+\textbf{Summary}\\
+This study develops \textbf{OBSTransformer (OBST)}, a seismic phase picker for challenging \textbf{Ocean Bottom Seismometer (OBS)} data, which suffers from high noise. The model was created using \textbf{transfer learning}, fine-tuning the land-based EQTransformer (EqT) model. A key innovation was creating a reliable training dataset via an \textbf{automated labeling} method (agreement between multiple pickers). The model was optimized for OBS data by filtering to 3-20 Hz (vs. 1-45 Hz) and using real OBS noise for data augmentation.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Superior Picking Performance on OBS Data}: Significantly boosted recall rates and F1-scores on OBS data compared to the original EqT model, even in high-noise scenarios.
+\item \textbf{Effective Use of Transfer Learning}: Successfully used transfer learning to adapt a land-based model to the OBS domain using a relatively small, auto-labelled dataset.
+\item \textbf{Optimized Data Preparation}: Optimized performance by using OBS-specific data preparation: 3-20 Hz filtering (to remove ocean noise) and real OBS noise augmentation.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Variations in Tectonic Settings}: Model performance varies across different tectonic settings and distance/depth ranges.
+\item \textbf{Need for Local Fine-Tuning}: Further local fine-tuning is recommended for specific regional studies to enhance performance.
+\item \textbf{Auto-Labelling Sensitivity}: The auto-labeling method's parameters (agreement number, time window) must be carefully balanced to ensure precision.
+\end{itemize}
+
+\section{REAL-TIME EARTHQUAKE EARLY WARNING WITH DEEP LEARNING: APPLICATION TO THE 2016 CENTRAL APENNINES, ITALY EARTHQUAKE SEQUENCE}
+\label{sec:2.13}
+\textbf{Authors}: Xiong Zhang, Miao Zhang and Xiao Tian\\
+\\
+\textbf{Summary}\\
+This research proposes a fully automatic, real-time EEW system that uses deep learning to map \textbf{raw, full waveforms} directly to earthquake source parameters (location and magnitude). The U-Net-like architecture (Conv2D, Maxpooling, Upsampling) avoids seismic picks and can work with just \textbf{one station}. The system is designed to evolutionarily update its predictions in real time as more waveform data arrives. Overfitting was mitigated using dropout layers.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Fully Automatic and Real-Time}: Provides a fully automatic EEW by mapping raw waveforms directly to source parameters.
+\item \textbf{Single-Station Capability}: Capable of generating location and magnitude estimates from a single station.
+\item \textbf{Evolutionary Updates}: The system dynamically updates its predictions in real-time as more waveform data becomes available.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Difficulty in Distinguishing Close Events}: Fails to distinguish multiple events that occur closely in time (e.g., within 30 seconds), potentially mixing up parameters.
+\item \textbf{Vulnerability to Waveform Overlay}: May miss events or produce false detections if a target waveform overlaps with the coda of a previous large earthquake.
+\item \textbf{Precision Improvement Challenges}: Improving location precision requires more large-event training data, which is difficult to synthetically generate accurately.
+\end{itemize}
+
+\section{SEISMIC-PHASE DETECTION USING MULTIPLE DEEP LEARNING MODELS FOR GLOBAL AND LOCAL REPRESENTATIONS OF WAVEFORMS}
+\label{sec:2.14}
+\textbf{Authors}: Tomoki Tokuda and Hiromichi Nagao\\
+\\
+\textbf{Summary}\\
+This paper introduces the \textbf{GL model}, a CNN-based framework for seismic phase detection that explicitly learns from \textbf{global} (full waveform) and \textbf{local} (waveform halves) representations. The final probability is a product of three submodels (G, L1, L2). This dual-representation strategy is designed to improve robustness, particularly against partially contaminated noise. The framework's flexibility was shown by adapting it to detect Low-Frequency Earthquakes (LFEs) by retraining only one submodel (L2).
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Enhanced Robustness against Partial Noise}: Significantly more robust against *partially* contaminated noise; accuracy was 0.88 vs 0.65 for a global-only model when the first half of the data was noisy.
+\item \textbf{Flexibility and Adaptability}: Highly flexible; successfully retrained to detect LFEs by modifying only one local submodel.
+\item \textbf{High Performance}: Achieved top-tier performance on benchmark (STEAD) and continuous (Bombay Beach) datasets, comparable to other state-of-the-art pickers.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Increased Training Cost}: Requires additional training cost as three separate submodels (G, L1, L2) must be trained.
+\item \textbf{Worse Performance under Global Noise}: Performs worse than a global-only model if the *entire* waveform is contaminated with noise.
+\item \textbf{Context Mixing}: Adapting the model for a new task (LFEs) caused its performance on conventional earthquakes to deteriorate.
+\end{itemize}
+
+\section{LEQNET: LIGHT EARTHQUAKE DEEP NEURAL NETWORK FOR EARTHQUAKE DETECTION AND PHASE PICKING}
+\label{sec:2.15} % Corrected label from 2.14 to 2.15
+\textbf{Authors}: Jongseong Lim, Sunghun Jung, Chan JeGal, Gwanghoon Jung, Jung Ho Yoo, Jin Kyu Gahm and Giltae Song\\
+\\
+\textbf{Summary}\\
+This research introduces \textbf{LEQNet}, a \textbf{lightweight} deep neural network for earthquake detection and phase picking, designed for resource-constrained \textbf{IoT devices} in on-site EEWS. It heavily optimizes the EQTransformer architecture using techniques like \textbf{depthwise separable CNNs}, recurrent CNNs (parameter reuse), and a deeper bottleneck structure. This approach drastically reduced the model size (by 79\%) and computational load (by 93\%) while maintaining high, comparable accuracy to the original EQTransformer.
+\\
+\\
+\textbf{Advantages}
+\begin{itemize}
+\item \textbf{Substantial Model Size and Parameter Reduction}: Achieved an 87.7\% reduction in parameters and a 79\% reduction in model size (4.5 MB to 0.94 MB) compared to EQTransformer.
+\item \textbf{High Computational Efficiency}: Drastically reduced the computational load (FLOPs) by 93.4\%, making it highly efficient.
+\item \textbf{Maintained High Accuracy}: Maintained F1-scores (0.99 detection, 0.98 P-phase, 0.97 S-phase) comparable to the state-of-the-art EQTransformer.
+\item \textbf{Suitable for On-Site EEWS Deployment}: The small footprint ($<$1 MB) makes it ideal for deployment on low-cost, on-site embedded IoT devices.
+\end{itemize}
+
+\textbf{Disadvantages}
+\begin{itemize}
+\item \textbf{Need for Further Size Reduction}: Further size reduction (to $<$256 kB) is needed to run on even smaller "tiny AI" devices.
+\item \textbf{Software Environment}: The model currently requires a standard TensorFlow environment, with future work needed to port it to TensorFlow Lite for optimal embedded performance.
+\end{itemize}
+
+\newpage
+% --- CHAPTER 3 ---
+\chapter{PROPOSED WORK}
+\label{chap:proposed_work}
+
+\section{PROBLEM STATEMENT}
+\label{sec:problem_statement}
+
+Existing earthquake detection systems, which are foundational to current seismic monitoring and Early Warning (EEW) initiatives, face several critical limitations that this proposed work aims to address.
+
+\paragraph{High False-Positive Rates and Noise Sensitivity} Traditional earthquake detection systems, such as STA/LTA (Short-Term Average/Long-Term Average) and other threshold-based pickers, struggle substantially with high false-alarm rates \cite{Meier2019}. These false positives often arise from local disturbances and high ambient noise levels. For seismic monitoring, particularly the detection of low-magnitude events, differentiating true seismic events originating from the subsurface from local noise (e.g., surface disturbances) is a challenge \cite{Shaheen2021}. Deep learning algorithms offer a potential solution by improving seismic signal/noise discrimination \cite{Meier2019}.
+
+\paragraph{Generalization and Data Dependency} A significant challenge identified in existing literature is the poor generalization of detection models to new geographical regions. Models trained for one area often perform sub-optimally when deployed in an area with different geological or tectonic settings. Earlier deep learning networks that performed classification based on regional groups required an enormous number of training samples to achieve precision comparable to manual methods \cite{Mousavi2020, Zhang2025}.
+
+\paragraph{Real-Time Processing and Resource Constraints} Conventional EEW algorithms often face issues related to latency \cite{Mukherjee2021, NakamuraEEW}. Moreover, a critical limitation for modern distributed EEW networks is the inability to process waveforms in real-time on low-power devices. Deploying state-of-the-art deep learning models, which often require high-throughput computing resources, is nearly impossible on small, cost-effective IoT devices used for on-site EEW \cite{Lim2022}. Thus, a lightweight model suitable for edge deployment is necessary for wide-scale, regional EEW deployment.
+
+\paragraph{Lack of End-to-End Integration} Many seismic monitoring systems suffer from a lack of end-to-end integration that seamlessly connects the detection, phase classification, localisation, and alerting stages. Conventional regional warning algorithms are composed of many steps—phase detection, phase picking, phase association, earthquake location, and magnitude estimation \cite{Ahn2023}. Each of these steps can potentially affect the final source parameter solutions, and the reliance on multiple steps requires more time for receiving and analysing signals at multiple stations. This complexity introduces unacceptable delays in providing timely alerts, failing the core objective of an EEW system \cite{NakamuraEEW, XZhang2021}.
+
+This project proposes a hybrid multi-stage Machine Learning (ML) system that consolidates the strengths of recent deep learning models (such as EQTransformer, LEQNet, GL, and OBSTransformer) \cite{Mousavi2020, Lim2022, Tokuda2023, Niksejel2023} into a unified architecture. This system is designed to overcome the above limitations while providing real-time seismic event classification and alerting capabilities.
+
+\section{PROPOSED METHODOLOGY}
+\label{sec:proposed_methodology}
+
+The proposed work is built around a comprehensive methodology designed to execute real-time, low-latency earthquake detection, classification, and alerting using a tiered, multi-stage architecture.
+
+\subsection{Core System Goals and Performance Objectives}
+\label{ssec:goals}
+
+The success of the proposed system is quantitatively defined by specific targets related to speed, accuracy, and operational reliability:
+\begin{enumerate}
+\item \textbf{Real-Time Detection and Latency:} The system must detect and classify seismic waves with high speed. The objective is a detection latency of $\leq 2$ seconds from the moment the signal is received \cite{Mukherjee2021, Ahn2023}. The ultimate target for an end-to-end alert generation must be $< 5$ seconds, demonstrating a focus on reducing the overall warning response time.
+\item \textbf{Accuracy (Classification):} The models must achieve a high classification accuracy for P and S waves. The required success metric is an F1-score of $\geq 0.94$ for P/S wave classification (corresponding to $\geq 94\%$ precision and recall) \cite{Mousavi2020, Lim2022}.
+\item \textbf{Localization Accuracy (Localization):} The final location determined by the system must be highly accurate, with the objective of estimating the epicenter within a mean error (MAE) of $15-20 \text{ km}$ ($MAE \leq 20 \text{ km}$) \cite{Zhang2025}.
+\item \textbf{Robustness and Reliability:} The system must operate reliably under challenging conditions, specifically low Signal-to-Noise Ratio (SNR) and teleseismic noise \cite{Meier2019}. The false alarm rate must be minimized to $< 2$ per month.
+\item \textbf{Scalability and Edge Deployment:} To enable deployment on a distributed network of seismic stations, the lightweight model used at the edge must have a small footprint, quantified as $< 1 \text{ MB}$ model size \cite{Lim2022}.
+\end{enumerate}
+
+\subsection{Multi-Stage Processing Workflow}
+\label{ssec:workflow}
+
+The system utilizes a hybrid, multi-stage ML system architecture divided into three primary tiers: the Edge Layer, the Regional Gateway Layer, and the Cloud and Visualization Layer.
+\begin{enumerate}
+\item \textbf{Waveform Ingestion and Preprocessing (Edge Layer):}
+\begin{itemize}
+\item The system begins by continuously ingesting live waveform streams, primarily in miniSEED (mseed) format, from local seismometers.
+\item Essential preprocessing steps are performed immediately at the edge to prepare the data for the lightweight ML model. These steps include de-trending, de-meaning, and bandpass filtering (FR-2). Data processing relies on technologies like the ObsPy Python library.
+\end{itemize}
+
+\item \textbf{Initial Detection and Phase Classification (Edge Layer):}
+\begin{itemize}
+\item A Lightweight CNN model (LEQNet-lite) is run on the preprocessed stream to perform event detection and preliminary phase classification (FR-3).
+\item The core constraint here is the model size of $< 1$ MB. This requirement dictates the choice of LEQNet \cite{Lim2022}, a model optimized using techniques like Depthwise Separable CNN and Recurrent CNN to significantly reduce parameter count. LEQNet achieves an $87.68\%$ parameter reduction and a model size of $0.94$ MB compared to EQTransformer \cite{Mousavi2020}, specifically designed for operation on ultra-small IoT devices with limited resources.
+\item Upon detecting an event above the confidence threshold, the edge generates Pick Packets containing the timestamp, P/S phase probability, and a short waveform snippet (10--30 s).
+\end{itemize}
+
+\item \textbf{Refined Picking and Localization (Regional Gateway Layer):}
+\begin{itemize}
+\item The Regional Gateway aggregates Pick Packets from multiple edge stations.
+\item Refined Phase Classification (FR-3) and Validation are performed using an ensemble of sophisticated deep learning models: EQTransformer, TPhaseNet, and GL (Global--Local) models \cite{Mousavi2020, Myklebust2024, Tokuda2023}.
+\item Localization (Triangulation): The system uses the P/S arrivals picked from multiple stations to triangulate the epicenter and hypocenter depth (focus point) (FR-5). This step also includes Magnitude estimation using ML/empirical regression.
+\item False Alert Suppression: Ensemble confidence scoring and teleseismic filtering are applied to suppress false alerts \cite{Meier2019}, contributing to the goal of maintaining a false alarm rate below 2 per month.
+\end{itemize}
+
+\item \textbf{Alerting and Dissemination (Regional Gateway \& Cloud):}
+\begin{itemize}
+\item If the event confirmation meets the regional threshold, the Gateway issues regional alert messages.
+\item The core requirement is to generate early warning alerts within 2 seconds of event detection \cite{Ahn2023}.
+\item Alerts are generated automatically via APIs/SMS/email/webhook notification systems.
+\end{itemize}
+
+\item \textbf{Supporting and Advanced Features:}
+\begin{itemize}
+\item Self-Learning Module: The system incorporates a Self-Learning Module for continuous model retraining using confirmed event data (FR-10). The Cloud Layer manages this periodic model training using transfer learning \cite{Niksejel2023}.
+\item Uncertainty Quantification (FR-9): The system is required to quantify model uncertainty and attach confidence scores to predictions.
+\item Single-station fallback: The system includes an optional advanced feature to predict distance and azimuth from a single station using concepts derived from models like DisNet/AziNet \cite{Zhang2025}. This is critical for scenarios where insufficient stations are triggered or available.
+\end{itemize}
+\end{enumerate}
+
+\section{SYSTEM DESIGN}
+\label{sec:system_design}
+
+The system employs a modular microservice structure for maintainability and is architecturally composed of three integrated layers: the Edge Layer, the Regional Gateway Layer, and the Cloud and Visualization Layer. This design ensures scalability to support 100+ stations per region.
+
+\subsection{Edge Layer Design (On-Site Processing)}
+\label{ssec:edge_layer}
+
+The Edge Layer is the first point of contact with the seismic data stream and is optimized for low-latency performance using minimal resources.
+
+\subsubsection{Components and Requirements}
+\begin{itemize}
+\item \textbf{Purpose:} Live waveform ingestion and initial, rapid event detection.
+\item \textbf{Waveform Ingestion:} Receives continuous waveform streams in miniSEED format.
+\item \textbf{Preprocessing:} Performs standard high-pass filtering (bandpass filtering), de-meaning, and de-trending (FR-2).
+\item \textbf{Technology Stack:} The Edge Detection component utilizes LEQNet-lite (optimized for TensorFlow Lite / ONNX deployment) \cite{Lim2022}.
+\item \textbf{Deployment:} The system must be portable, deployable on ARM/Linux devices (e.g., Raspberry Pi, Jetson).
+\end{itemize}
+
+\subsubsection{The LEQNet-lite Model}
+The selection of LEQNet-lite addresses the non-functional requirement that the edge model size must be $< 1 \text{ MB}$. LEQNet is a lightweight Deep Neural Network (DNN) designed for ultra-small devices \cite{Lim2022}. The model achieves its small size and high efficiency by incorporating several lightweight techniques:
+\begin{itemize}
+\item \textbf{Depthwise Separable CNN:} Applied to the encoder and decoder for feature compression and decompression, exponentially reducing computations compared to traditional convolutions.
+\item \textbf{Recurrent CNN:} Reduces the model size and inference time by reusing existing parameters and decreasing memory access costs.
+\item \textbf{Deeper Bottleneck Structure:} Replaces heavier residual blocks (like those in EQTransformer) to further reduce parameters.
+\end{itemize}
+These optimizations allow LEQNet to achieve an $87.68\%$ reduction in parameters and a $79\%$ reduction in model size (from $4.5$ MB to $0.94$ MB) compared to the EQTransformer \cite{Lim2022, Mousavi2020}, all while maintaining high phase picking performance (F1-scores of $0.98$ for P-phase and $0.97$ for S-phase, compared to EqT’s $0.99$ and $0.98$).
+
+\subsubsection{Output}
+The edge device outputs highly compressed Pick Packets (timestamp, P/S probability, 10--30 s waveform snippet) to the Regional Gateway via MQTT/gRPC.
+
+\subsection{Regional Gateway Layer Design (Centralized Intelligence)}
+\label{ssec:gateway_layer}
+
+The Regional Gateway serves as the centralized brain, aggregating data from multiple edge nodes and performing complex, resource-intensive analysis for event confirmation and precise localization.
+
+\subsubsection{Components and Requirements}
+\begin{itemize}
+\item \textbf{Purpose:} Aggregation, refined phase picking, localization, magnitude estimation, and alert issuance.
+\item \textbf{Data Aggregation:} Collects Pick Packets from multiple edge stations. Communication utilizes robust protocols like MQTT / gRPC / REST.
+\item \textbf{Data Processing:} Uses ObsPy (Python library for seismology) for data handling and processing.
+\end{itemize}
+
+\subsubsection{Ensemble Deep Learning Refinement}
+The Gateway runs an ensemble of models for refined seismic phase classification and validation, leveraging models known for their high accuracy and specialized capabilities:
+\begin{enumerate}
+\item \textbf{EQTransformer (EqT):} Used for simultaneous earthquake detection and phase picking. EqT is a global deep-learning model that uses a hierarchical attention mechanism to combine information from the seismic phases and the full waveform \cite{Mousavi2020}. Its architecture includes 1D convolutions, LSTM, transformer, and residual connections. This dual-task approach enhances performance in both detection and picking.
+\item \textbf{TPhaseNet:} Included for specialized processing of regional events. TPhaseNet is a modification of the PhaseNet architecture that increases the number of down-sampling blocks and adds transformer blocks to handle the characteristics of long input time windows (e.g., 5 minutes) associated with regional seismic records \cite{Myklebust2024}. This design yields more accurate predictions on regional events compared to state-of-the-art baselines like PhaseNet and EQTransformer.
+\item \textbf{GL (Global--Local) Model:} Employed for enhanced robustness to noise and signal characteristics. The GL model uses a dual-representation strategy where it trains separate convolutional neural networks (L1, L2) on the first and second halves (local representations) of the waveform, in addition to the full waveform (global representation, G model) \cite{Tokuda2023}. This explicit separation allows it to maintain high accuracy even when portions of the waveform are contaminated by noise.
+\end{enumerate}
+
+\subsubsection{Localization and Magnitude Estimation}
+\begin{itemize}
+\item Once reliable P and S arrivals from multiple stations are confirmed, triangulation is performed to calculate the epicenter (latitude, longitude) and hypocenter depth (focus point).
+\item Magnitude estimation is conducted using ML/empirical regression techniques.
+\end{itemize}
+
+\subsubsection{Alerting}
+\begin{itemize}
+\item The Gateway applies ensemble confidence scoring and includes teleseismic filtering to minimize false alerts originating from distant signals \cite{Meier2019}.
+\item Upon confirmation, it issues regional alert messages (FR-6), striving for detection latency $\leq 2$ seconds.
+\end{itemize}
+
+\subsection{Cloud and Visualization Layer Design (Data Management and User Interface)}
+\label{ssec:cloud_layer}
+
+The Cloud Layer handles long-term data storage, system maintenance, model development, and public-facing alert visualization and access.
+
+\subsubsection{Components and Requirements}
+\begin{itemize}
+\item \textbf{Purpose:} Data storage, model retraining, visualization, and alert dissemination management.
+\item \textbf{Data Storage (FR-7):} Waveform data and metadata are efficiently stored in a database utilizing MongoDB / InfluxDB.
+\item \textbf{Visualization (FR-8):} Provides a Web Dashboard for users, displaying a seismic map, event timeline, magnitude, and uncertainty. The visualization stack uses React.js + Flask backend.
+\item \textbf{Self-Learning Module (FR-10):} The cloud infrastructure is responsible for running periodic model training and retraining using new confirmed event data (e.g., confirmed events) via transfer learning \cite{Niksejel2023}. This task is powered by PyTorch / TensorFlow.
+\item \textbf{Alert System Integration:} Manages the emergency alert dissemination system, integrating technologies such as Twilio / Webhook / Email integration for robust notification delivery.
+\item \textbf{Interoperability:} The system is designed to be compatible with industry standards like SEEDLink, ObsPy, and USGS data feeds.
+\end{itemize}
+
+\subsubsection{Advanced Localization Fallback}
+The Cloud Layer supports advanced features necessary for robust operation, including:
+\begin{itemize}
+\item \textbf{Single-station fallback:} The system retains the capability to predict earthquake location parameters (distance and azimuth) using observations from a single station if multi-station data is unavailable or insufficient. This relies on specialized deep learning models like DisNet (Epicentral Distance Prediction Network) and AziNet (Back-Azimuth Prediction Network) \cite{Zhang2025}. These networks utilize residual and LSTM blocks to extract waveform and temporal features necessary for predicting epicentral distance and back-azimuth.
+\item \textbf{Uncertainty Quantification (FR-9):} Outputs confidence intervals and scores for each prediction to provide a measure of reliability.
+\end{itemize}
+
+\newpage
+
+%\newpage
+% --- CHAPTER 4 ---
+\chapter{SYSTEM ARCHITECTURE AND DIAGRAM}
+
+The proposed project designs and implements a Real-Time Automated Seismic Wave Classification and Early Warning System utilising a novel hybrid multi-stage Machine Learning (ML) system. This architecture overcomes traditional limitations such as high false-positive rates \cite{Meier2019}, poor geographical generalization \cite{Zhang2025}, and high detection latency \cite{Mukherjee2021}. The system is built on a modular microservice structure, prioritized for maintainability and scalability, capable of supporting $100+$ stations per region. The core purpose is the real-time processing of seismic waveform data (miniSEED format), phase classification (P, S, and Surface waves), and the provision of early warning alerts. A critical performance goal is achieving an end-to-end alert time of $< 5 \text{ seconds}$.
+
+The architecture is systematically divided into three interconnected layers, designed to balance computational load and maximise speed: the Edge Layer, the Regional Gateway Layer, and the Cloud and Visualization Layer.
+
+\section{Edge Layer Design (Decentralized, Low Latency)}
+\label{sec:edge_layer_design}
+
+The Edge Layer is the initial, on-site processing tier, optimized for immediate detection using minimal computing resources. This layer ensures low-latency performance directly at the sensor location.
+
+\subsection{Core Functions and Technology}
+The edge device continuously receives the live waveform stream, typically in miniSEED (mseed) format, from a local seismometer \cite{Mousavi2020, Myklebust2024} [FR-1]. It immediately performs essential preprocessing steps, including de-trending, de-meaning, and bandpass filtering \cite{Mousavi2020, Shaheen2021} [FR-2].
+
+The key component at this layer is the lightweight model responsible for event detection and preliminary phase classification (FR-3).
+
+\subsection{Model Selection: LEQNet-lite}
+
+\paragraph{Model Selection} The system uses the LEQNet-lite model (a Lightweight CNN model) \cite{Lim2022}.
+
+\paragraph{Deployment Constraints} This model is constrained by the non-functional requirement that the edge model size must be $< 1 \text{ MB}$. The system must also be portable and deployable on ARM/Linux devices (e.g., Raspberry Pi or Jetson).
+
+\paragraph{LEQNet Optimisation} LEQNet is a Deep Neural Network designed for operation on ultra-small IoT devices with limited embedded RAM \cite{Lim2022}. It achieves its minimal footprint and high efficiency through several lightweight techniques:
+\begin{itemize}
+\item \textbf{Depthwise Separable CNN:} Applied to the encoder and decoder to reduce computations by separating channel feature extraction (depthwise convolution) and inter-channel feature extraction (pointwise convolution).
+\item \textbf{Recurrent CNN:} Used to decrease memory access costs and model size by reusing existing parameters in the encoder and decoder blocks.
+\item \textbf{Deeper Bottleneck Structure:} Replaces heavier residual blocks (like those in EQTransformer) to further reduce parameters.
+\end{itemize}
+
+\paragraph{Efficiency} These techniques resulted in an $87.68\%$ reduction in parameters (to 39,776) and a $79\%$ reduction in model size (to $0.94 \text{ MB}$) compared to the EQTransformer baseline \cite{Lim2022, Mousavi2020}.
+
+\subsection{Output and Communication}
+Upon detection of a potential event, the Edge Layer generates compressed Pick Packets containing the timestamp, P/S phase probability, and a short waveform snippet (10--30 s). These packets are sent to the Regional Gateway using protocols such as MQTT/gRPC.
+
+\section{Regional Gateway Layer Design (Centralized Refinement)}
+\label{sec:gateway_layer_design}
+
+The Regional Gateway functions as the core processing hub, aggregating data from multiple edge nodes to perform highly accurate, complex analysis, crucial for official EEW decision-making.
+
+\subsection{Core Functions and Model Ensemble}
+The Gateway aggregates Pick Packets from multiple edge stations. It performs refined Phase Classification (FR-3) and Validation using an ensemble of sophisticated deep learning models. The use of an ensemble enhances accuracy ($\text{F1} \ge 0.94$) and reliability.
+
+\begin{description}
+\item[EQTransformer (EqT):] Used for simultaneous earthquake detection and phase picking. EqT features a multi-task structure with one very-deep encoder and three decoders. Its architecture incorporates 1D convolutions, LSTM, transformer, and self-attentive layers (both global and local attention) to model dependencies between detection and picking tasks \cite{Mousavi2020}.
+\item[TPhaseNet:] Included to handle regional events. TPhaseNet is a modified PhaseNet architecture featuring seven down-sampling blocks and transformer blocks integrated into the final four down-sampling blocks. This design is optimized to enhance prediction accuracy when processing long input time windows characteristic of regional seismic records \cite{Myklebust2024}.
+\item[GL (Global--Local) Model:] Utilized to improve robustness against partially contaminated noise. The GL model trains separate CNN branches on the full waveform (Global) and the segmented halves (Local) of the input data, leveraging the prior knowledge that different parts of the waveform convey distinct seismic phase information \cite{Tokuda2023}.
+\end{description}
+
+\subsection{Localization and Alerting}
+After validated P and S arrivals are confirmed across multiple stations, the Gateway executes the crucial localization steps:
+
+\begin{itemize}
+\item \textbf{Triangulation (FR-5):} Calculates the event epicenter (latitude, longitude) and hypocenter depth (focus point) using P/S arrivals from multiple stations.
+\item \textbf{Magnitude Estimation:} Performed via ML/empirical regression.
+\item \textbf{False Alert Suppression:} The system applies ensemble confidence scoring and teleseismic filtering to maintain a noise robustness objective of a false alarm rate $< 2 \text{ per month}$ \cite{Meier2019}.
+\item \textbf{Alert Generation (FR-6):} Issues regional alert messages using integrated systems upon event confirmation. The high-priority requirement mandates that the system shall generate early warning alerts within 2 seconds \cite{Ahn2023}.
+\end{itemize}
+
+\subsection{Advanced Fallback Feature}
+The system also includes an Advanced/Optional Feature involving Single-station fallback to predict distance and azimuth from a single station using deep learning models based on DisNet/AziNet concepts. The DisNet (Distance Prediction Network) utilizes residual blocks (Res-block) and LSTM blocks to extract waveform and temporal features for epicentral distance prediction \cite{Zhang2025}.
+
+\section{Cloud and Visualization Layer Design (Storage, Learning, and UI)}
+\label{sec:cloud_layer_design}
+
+The Cloud Layer provides the infrastructure for system persistence, visualization, and ongoing development, supporting the system's long-term maintainability.
+
+\subsection{Data and Learning Management}
+\begin{itemize}
+\item \textbf{Data Storage (FR-7):} Waveform data and metadata are stored in a database environment using MongoDB / InfluxDB.
+\item \textbf{Self-Learning Module (FR-10):} The system supports auto-retraining with new confirmed events, utilizing a continuous model retraining strategy via transfer learning \cite{Niksejel2023, Zhang2025}. This capability is implemented using PyTorch / TensorFlow.
+\end{itemize}
+
+\subsection{User Interface and Dissemination}
+\begin{itemize}
+\item \textbf{Visualization (FR-8):} A Web Dashboard is provided to visualize real-time results, including a seismic map, event timeline, magnitude, and uncertainty.
+\item \textbf{APIs:} APIs are provided for third-party access for EEW applications and research use.
+\item \textbf{Alert Dissemination:} The system integrates services like Twilio / Webhook / Email integration for robust emergency alert dissemination.
+\end{itemize}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=1\linewidth]{operations_fl.png}
+\caption{Flow-chart representation of the operations}
+\label{fig:4.1}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=1\linewidth]{systemarc_fl.png}
+\caption{System Architecture Diagram}
+\label{fig:4.2}
+\end{figure}
+
+%\newpage
+% --- CHAPTER 5 ---
+\chapter{CONCLUSION}
+\label{chap:conclusion}
+
+The Real-Time Automated Seismic Wave Classification and Early Warning System project successfully addresses fundamental limitations inherent in traditional seismic monitoring, achieving a high degree of automation and efficiency through a hybrid multi-stage Machine Learning (ML) architecture. The primary purpose of this integrated design is to classify seismic phases (P, S, and Surface waves), estimate earthquake source parameters (epicenter and focus point), and deliver critical early warnings.
+
+\section{Achieving Core System Objectives Through Hybrid ML}
+The system was designed around stringent performance objectives to ensure practical, reliable, and swift operation, demonstrating significant advancement over conventional single-model or pick-based EEW systems.
+
+\subsection{Maximizing Speed and Timeliness}
+A core goal was real-time detection with a latency of $\le 2$ seconds from signal reception, contributing to an overall alert latency target of $< 5$ seconds. The system design enables an immediate response to earthquake location and magnitude information as soon as effective seismic signals are recorded at even one station \cite{XZhang2021}. This focus on reducing response time is essential for improving EEW systems, as current regional warning algorithms composed of multiple sequential steps (detection, picking, association, location, and magnitude estimation) require more time to receive and analyse signals from multiple stations \cite{Ahn2023}. In practice, ML models using advanced feature extraction have demonstrated the capability of generating alarms within approximately 2~seconds \cite{Mukherjee2021, Vikraman2016}.
+
+\subsection{Ensuring Accuracy and Reliability}
+The project targets an F1-score of $\ge 0.94$ for P/S wave classification and a maximum Localization Error (MAE) of $\le 20 \text{ km}$.
+\begin{itemize}
+\item \textbf{Classification:} The performance of the models deployed, such as the lightweight LEQNet-lite (used at the edge), already demonstrates high accuracy with F1-scores of 0.99 for detection, 0.98 for P-phase picking, and 0.97 for S-phase picking \cite{Lim2022}. This performance is comparable to the much heavier EQTransformer, thus meeting the strict accuracy goals while simultaneously satisfying resource constraints \cite{Lim2022, Mousavi2020}.
+\item \textbf{Localization:} The method proposes using P/S arrivals from multiple stations to perform triangulation to compute the epicenter and focus point. Additionally, the architecture incorporates single-station location models (based on DisNet/AziNet concepts) for scenarios with insufficient stations. While predicting back-azimuth is often challenging (MAE 55 degrees in some regional tests), the prediction of epicentral distance can be highly accurate (MAE 5.0~km after transfer learning on regional data) \cite{Zhang2025}. The ultimate goal is to improve accuracy by incorporating these precise epicentral distances and station locations.
+\end{itemize}
+
+\subsection{Robustness and Scalability for Wide Deployment}
+The system is explicitly designed to minimize the False Alarm Rate to $< 2 \text{ per month}$, ensuring high reliability, especially under challenging conditions like low Signal-to-Noise Ratio (SNR) or teleseismic noise. Managing false alarms is paramount due to the high societal cost of panic and confusion caused by incorrect alerts, as seen in past incidents in Japan, the United States, and Mexico \cite{Meier2019, NakamuraEEW}. The system addresses this through:
+\begin{itemize}
+\item \textbf{Edge Intelligence:} The adoption of the LEQNet-lite model at the Edge Layer successfully meets the demanding Non-Functional Requirement of a model size $< 1 \text{ MB}$. LEQNet achieved a reduction of $87.68\%$ in parameters and a $79\%$ reduction in model size (down to $0.94$~MB) compared to EQTransformer \cite{Lim2022, Mousavi2020}, confirming its suitability for deployment on low-cost IoT devices with embedded RAM of less than 1~MB. This confirms the system's scalability to a distributed network of seismic stations.
+\item \textbf{Ensemble Filtering:} The Regional Gateway uses an ensemble of models---including EQTransformer, TPhaseNet, and GL models---for refined validation and applying teleseismic filtering to actively suppress false alerts \cite{Mousavi2020, Myklebust2024, Tokuda2023}. The GL model’s capability to explicitly learn local waveform representations enhances its robustness against partially contaminated noise, which can significantly outperform global-only models in challenging noise scenarios \cite{Tokuda2023}.
+\end{itemize}
+
+\section{Innovation in Deep Learning Application}
+The proposed system architecture successfully integrates several state-of-the-art deep learning concepts, ensuring specialized processing for different operational needs:
+\begin{itemize}
+\item \textbf{Regional Event Specialisation (TPhaseNet):} The inclusion of TPhaseNet acknowledges the necessity of specialization for regional events, which are characterised by long input time windows. TPhaseNet, a modification of PhaseNet, includes more down-sampling blocks and transformer blocks to handle the characteristics of regional records, yielding better performance compared to standard baselines like PhaseNet and EQTransformer on regional datasets \cite{Myklebust2024, Mousavi2020}.
+\item \textbf{Waveform Feature Extraction:} The entire process relies on the deep learning capability to extract essential features automatically from raw data without manual feature engineering, translating indistinguishable input data into higher-dimensional space where they become linearly separable. Convolutional Neural Networks (CNNs) are key to this, exploiting local structure and providing better temporal invariance, crucial for generalization. The system preprocesses mseed waveforms (FR-1) using techniques like bandpass filtering and relies on advanced analysis methods, similar to using Filter Banks and Mel-Frequency Cepstral Coefficients (MFCCs) in other studies \cite{Mukherjee2021, Vikraman2016} [FR-2].
+\item \textbf{Transfer Learning for Customization:} The Self-Learning Module supports auto-retraining with new confirmed events (FR-10) via transfer learning. This strategy is crucial because ML model performance heavily depends on using training data from the appropriate geographical or distance range. Transfer learning allows pre-trained models (like those trained on global data like STEAD) to be fine-tuned with local data (like the Sichuan or Yunnan datasets), significantly enhancing prediction accuracy for the specific region \cite{Zhang2025}. This mirrors success seen in OBS data processing \cite{Niksejel2023}, where pre-trained land models were adapted using transfer learning and customized filtering for the high-noise OBS environment.
+\end{itemize}
+
+\section{Future Directions and Expected Outcomes}
+The project is structured to produce a fully functional prototype capable of classifying P, S, and Surface waves in real time, serving as a scalable EEW architecture deployable at regional or national levels.
+
+While the architecture is highly robust, future development must focus on complex operational challenges:
+\begin{itemize}
+\item \textbf{Overlap and Clustering:} The system currently faces limitations in distinguishing earthquakes that occur closely in time (e.g., within 30 seconds), or when waveforms overlap with the coda waves of large earthquakes, which can result in missed detection or mixing of source parameters \cite{XZhang2021}. Advanced clustering and association methods are critical to mitigate these issues.
+\item \textbf{Tiny AI Optimization:} While LEQNet is effective for devices with 1~MB of embedded RAM, continuous demand for smaller, more cost-effective solutions requires further size reduction to meet the needs of "tiny AI models" operating below 256~kB memory, necessitating future work using frameworks like TensorFlow Lite \cite{Lim2022}.
+\item \textbf{Enhanced Generalization:} Continuous model retraining (FR-10) remains essential to ensure the model does not overfit to specific training noise properties and maintains high performance on unseen test data.
+\end{itemize}
+
+% --- CHAPTER 8: REFERENCES ---
+\newpage
+
+
+% Rename the default "Bibliography" title to "REFERENCES"
+\renewcommand{\bibname}{REFERENCES}
+
+
+% Manually add the italicized entry to the ToC
+\addcontentsline{toc}{chapter}{\textit{References}}
+\vspace{0.5cm}
+
+
+\fontsize{12pt}{18pt}\selectfont
+% This environment will now automatically create the "REFERENCES" title
+\begin{thebibliography}{99}
+
+
+\bibitem{Ahn2023} % RF 1.pdf
+J-K. Ahn, E. Park, B. Kim, E-H. Hwang, and S. Hong (2023). \textbf{Stable operation process of earthquake early warning system based on machine learning: trial test and management perspective.} \textit{Front. Earth Sci.}, vol. 11, article 1157742. doi: 10.3389/feart.2023.1157742.
+
+
+\bibitem{Chu2024} % RF 6.pdf
+B. Chu, Y. Zhang, L. Fu, S. Qi, G. Chen, Z. Shi, T. Huang, Z. Pang, and H. Zhang (2024). \textbf{Deep learning for identifying earthquake precursors: Applications and challenges in subsurface fluid signals.} \textit{The Innovation Geoscience}, vol. 2, no. 4, article 100093. DOI: 10.59717/j.xinn-geo.2024.100093.
+
+
+\bibitem{Lim2022} % RF 15.pdf
+J. Lim, S. Jung, C. JeGal, G. Jung, J. H. Yoo, J. K. Gahm, and G. Song (2022). \textbf{LEQNet: Light Earthquake Deep Neural Network for Earthquake Detection and Phase Picking.} \textit{Front. Earth Sci.}, vol. 10, article 848237. doi: 10.3389/feart.2022.848237.
+
+
+\bibitem{Meier2019} % RF 8.pdf
+M.-A. Meier, Z. E. Ross, A. Ramachandran, A. Balakrishna, S. Nair, P. Kundzicz, Z. Li, J. Andrews, E. Hauksson, and Y. Yue (2019). \textbf{Reliable Real-time Seismic Signal/Noise Discrimination with Machine Learning.} \textit{J. Geophys. Res. Solid Earth}, vol. 124. https://doi.org/10.1029/2018JB016661.
+
+
+\bibitem{Mousavi2020} % RF 7.pdf
+S. M. Mousavi, W. L. Ellsworth, W. Zhu, L. Y. Chuang, and G. C. Beroza (2020). \textbf{Earthquake transformer—an attentive deep-learning model for simultaneous earthquake detection and phase picking.} \textit{Nat Commun}, vol. 11, article 3952. https://doi.org/10.1038/s41467-020-17591-w.
+
+
+\bibitem{Mukherjee2021} % Referance Paper on project.pdf
+T. Mukherjee, C. Singh, and P. K. Biswas (2021). \textbf{A NOVEL APPROACH FOR EARTHQUAKE EARLY WARNING SYSTEM DESIGN USING DEEP LEARNING TECHNIQUES.} \textit{Preprint, January 19, 2021.}
+
+
+\bibitem{Myklebust2024} % RF 10.pdf
+E. B. Myklebust and A. Köhler (2024). \textbf{Deep learning models for regional phase detection on seismic stations in Northern Europe and the European Arctic.} \textit{GJI Seismology}, Accepted 2024 Aug 21.
+
+
+\bibitem{NakamuraEEW} % RF 2.pdf
+Y. Nakamura, J. Saita, and T. Sato (2010). \textbf{On an earthquake early system (EEW) and its applications.} \textit{Soil Dynamics and Earthquake Engineering}. doi:10.1016/j.solidyn.2010.04.012.
+
+
+\bibitem{Niksejel2023} % RF 12.pdf
+A. Niksejel and M. Zhang (2023). \textbf{OBSTransformer: A Deep-Learning Seismic Phase Picker for OBS Data Using Automated Labelling and Transfer Learning.} \textit{Preprint/Paper, Alireza Niksejel and Miao Zhang.}
+
+
+\bibitem{Shaheen2021} % RF 9.pdf
+A. Shaheen, U. bin Waheed, M. Fehler, L. Sokol, and S. Hanafy (2021). \textbf{GroningenNet: Deep Learning for Low-Magnitude Earthquake Detection on a Multi-Level Sensor Network.} \textit{Sensors}, vol. 21, no. 23, article 8080. http://dx.doi.org/10.3390/s21238080.
+
+
+\bibitem{Tokuda2023} % RF 14.pdf
+T. Tokuda and H. Nagao (2023). \textbf{Seismic-phase detection using multiple deep learning models for global and local representations of waveforms.} \textit{GJI Seismology}. Accepted 2023 July 3.
+
+
+\bibitem{Vikraman2016} % RF 5.pdf
+K. Vikraman (2016). \textbf{Deep Feed Forward Network for Earthquake Classification Using Foreshock, Mainshock, and Aftershock Data.} \textit{Contextual Paper/Unpublished Report, 2016.}
+
+
+\bibitem{Wu2021} % RF 3.pdf
+Y.-M. Wu and H. Mittal (2021). \textbf{A Review on the Development of Earthquake Warning System Using Low-Cost Sensors in Taiwan.} \textit{Sensors}, vol. 21, no. 22, article 7649. https://doi.org/10.3390/s21227649.
+
+
+\bibitem{XZhang2021} % RF 13.pdf
+X. Zhang, M. Zhang, and X. Tian (2021). \textbf{Real-time Earthquake Early Warning with Deep Learning: Application to the 2016 Central Apennines, Italy Earthquake Sequence.} \textit{Paper/Preprint, Xiong Zhang, Miao Zhang, Xiao Tian.}
+
+
+\bibitem{Zhang2025} % RF 11.pdf
+Zhang et al. (2025). \textbf{Waveform-based seismic location methods...} \textit{Earth, Planets and Space}, vol. 77, article 133. https://doi.org/10.1186/s40623-025-02258-x.
+\end{thebibliography}
+
+\end{document}

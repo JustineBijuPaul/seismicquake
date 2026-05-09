@@ -1,0 +1,71 @@
+\begin{center}
+    \Large\textbf{CHAPTER 1} \\
+    \vspace{0.2cm}
+    \Large\textbf{INTRODUCTION}
+\end{center}
+
+\vspace{0.5cm}
+
+\justify\noindent{{\fontsize{14pt}{12pt}\selectfont\title\large\textbf{{1.1 Background and Motivation}}}}
+\vspace{0.2cm}
+
+{\fontsize{12pt}{18pt}\selectfont
+Earthquakes have been an intrinsic component of the planet Earth since time immemorial. These geophysical events are caused by movements in the tectonic plates of the earth’s crust, which subsequently release massive amounts of energy. This released energy travels through the earth’s surface in the form of seismic waves, resulting in shaking that can range from mild to tremendous. Although the complete process of seismic wave propagation occurs within a few minutes, the window of time available to respond to these occurrences has significantly increased in importance.
+
+Major earthquakes carry the potential to cause substantial devastation to both property and life. Given that preventing an earthquake from occurring is not a logical possibility, the critical focus for seismologists and engineers must shift to mitigating the catastrophic damage these events inflict. This necessity underscores the urgent requirement for developing robust and reliable prediction and early warning methodologies.
+
+Historically, earthquake prediction has proven challenging. A notable example of a successful prediction was the Haicheng earthquake in 1975. Precursors observed before this event included a sequence of foreshocks, unusual animal behaviour, and geophysical anomalies such as geodetic deformation and variations in groundwater levels. However, the primary difficulty lies in the fact that these specific abnormalities were absent in many other major earthquake events, indicating that there is no generic or universal precursor available for earthquake prediction.
+
+This gap in traditional predictive methods highlights the potential role of modern computational approaches, specifically machine learning and deep learning. Although research integrating machine learning and deep learning into seismology remains relatively limited compared to other fields, the vast quantities of seismic data now accessible to researchers open up new avenues for detailed research. Previous successful deep learning applications in seismology include real-time foreshock identification, earthquake detection and location using Convolutional Neural Networks (CNN), and seismic wave discrimination using machine learning.
+
+The ability to obtain information about an earthquake’s occurrence as early as possible is crucial, as this allows for the development of alert mechanisms to facilitate an easier response to the impending event. Traditional techniques for detecting earthquakes, such as the Short-Term Average/Long-Term Average (STA/LTA) algorithm, often face limitations. This research explores an alternative methodology: detecting and classifying earthquakes by analysing the sounds associated with them. Sound is inherently an effect produced by physical phenomena, earthquakes included. The perception of sound is commonly reported either during or immediately following the tremors caused by an earthquake. This methodology is predicated on the idea that an earthquake’s magnitude relates directly to the characteristics of the vibrations or sounds it produces.
+}
+
+\vspace{0.6cm}
+\noindent{{\justify{\fontsize{14pt}{12pt}\selectfont\title\large\textbf{{1.2 Magnitude and Energy of Earthquakes}}}}}
+\vspace{0.2cm}
+
+{\fontsize{12pt}{18pt}\selectfont
+The severity and size of earthquakes are quantified using magnitude scales, typically covering a range from 1 to 10. Among these, the moment magnitude scale, abbreviated as $M_W$, is the globally preferred scale because it applies to a wide spectrum of earthquake sizes.
+
+A fundamental concept in earthquake measurement is that magnitudes are exponential in nature. This exponential relationship dictates how the physical consequences of an earthquake scale with its reported magnitude. When ground motion is recorded by a seismograph, an increase of one whole number on the magnitude scale corresponds to a tenfold increase in the amplitude of the recorded ground motion.
+
+To illustrate the severity of this exponential scaling, a magnitude 2 earthquake generates a level of ground shaking that is ten times greater than that produced by a magnitude 1 earthquake. The scale of energy release is even more dramatic—each increase of one whole unit in magnitude corresponds to approximately 32 times as much energy release. While the amplitude scales by a factor of 10, the total energy released scales substantially higher.
+
+To contextualise the immense forces involved, consider that a magnitude 1 earthquake releases energy equivalent to the detonation of 6 ounces of TNT, whereas a magnitude 8 earthquake would release energy equivalent to 6 million tons of TNT. This exponential increase underscores why major seismic events pose such a significant threat to infrastructure and life.
+
+The vibrational characteristics, or sounds, associated with earthquakes are also magnitude-dependent. An earthquake of magnitude 5 will possess a distinct sound or vibration pattern compared to another earthquake measuring magnitude 4. Furthermore, earthquakes of similar magnitudes should theoretically produce similar vibrations or sounds. Although these subtle differences might be indistinguishable to human ears, they can be efficiently captured and classified by neural networks. This study relies on the principle that any wave generates a vibration, and any vibration has an associated sound—even if inaudible to humans. These wave interactions (P-wave, S-wave, and surface waves) determine the earthquake’s intensity and vibrational signature.
+} 
+
+\newpage
+\vspace{0.6cm}
+\noindent{{\justify{\fontsize{14pt}{12pt}\selectfont\title\large\textbf{{1.3 Need for Reliable Early Warning Systems}}}}}
+\vspace{0.2cm}
+
+{\fontsize{12pt}{18pt}\selectfont
+The necessity for reliable and fast Earthquake Early Warning (EEW) systems stems from the inherent difficulties and limitations associated with existing classical seismic analysis techniques. Modern seismology faces major challenges in data analysis and processing due to the massive volume of seismic data being generated. Many widely used techniques in major data centres are outdated, having been developed when available data was limited and computational resources were scarce.
+
+\textbf{Limitations of Classical Algorithms:}
+\begin{itemize}
+    \item \textbf{Dependency on Prerequisites:} The STA/LTA algorithm depends heavily on accurate, user-defined thresholds.
+    \item \textbf{Regional Variation:} Threshold parameters must be adjusted differently for each geographical region.
+    \item \textbf{Ambiguous Thresholding:} High thresholds reduce false alarms but miss small earthquakes, while low thresholds increase false alarms.
+    \item \textbf{False Alarms and Delays:} Incorrectly set parameters can lead to false triggers or delayed detection, with typical alarms occurring 3 seconds after P-wave arrival.
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Advantages of Deep Learning for EEW:}
+Deep learning (DL) and machine learning offer a compelling solution to these limitations. DL models are particularly well-suited for real-time seismology and EEW. Although training these networks is computationally expensive, once trained, they can extract features directly from raw data and make expert-level decisions efficiently.
+
+The proposed method leverages deep learning techniques—specifically CNN and LSTM—on audio signal representations of seismic data to automatically detect earthquakes, reducing human intervention and improving reliability.
+
+Key benefits of the proposed deep learning approach include:
+\begin{itemize}
+    \item \textbf{Feature Extraction:} DL models extract essential features from raw vibrational data without manual engineering.
+    \item \textbf{Robustness:} Models are invariant to minor variations in event timing and location.
+    \item \textbf{Real-Time Suitability:} Since input is purely waveform-based, the models can be deployed onsite with minimal setup.
+    \item \textbf{Speed and Accuracy:} CNN and LSTM models achieved 91.1\% and 93.99\% accuracy, respectively, generating alarms in about 2–2.5 seconds after P-wave arrival—faster and more accurate than STA/LTA methods.
+\end{itemize}
+
+By converting seismograph-recorded data into audio signals and applying speech recognition techniques like Filter Bank Coefficients and Mel Frequency Cepstral Coefficients (MFCCs) for feature extraction, deep learning enables systems to “listen” to the Earth’s vibrations, treating them as speech signals. This novel approach provides a significant advancement toward developing reliable, high-speed early warning capabilities.
+}
