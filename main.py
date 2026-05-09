@@ -21,6 +21,8 @@ import os
 import sys
 import json
 import time
+import struct
+import socket
 import warnings
 import threading
 from pathlib import Path
@@ -29,9 +31,10 @@ from dataclasses import asdict
 from typing import Optional, List, Tuple
 from collections import deque
 
-# Suppress warnings
+# Suppress warnings and TensorFlow noise
 warnings.filterwarnings('ignore')
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 import numpy as np
 
@@ -43,10 +46,12 @@ from PyQt6.QtWidgets import (
     QDoubleSpinBox, QCheckBox, QComboBox, QSlider, QSplitter,
     QFrame, QListWidget, QListWidgetItem, QMessageBox, QToolBar,
     QSizePolicy, QScrollArea, QTableWidget, QTableWidgetItem,
-    QHeaderView, QDialog, QDialogButtonBox, QFormLayout
+    QHeaderView, QDialog, QDialogButtonBox, QFormLayout,
+    QGraphicsOpacityEffect
 )
 from PyQt6.QtCore import (
-    Qt, QTimer, QThread, pyqtSignal, QSize, QUrl
+    Qt, QTimer, QThread, pyqtSignal, QSize, QUrl,
+    QPropertyAnimation
 )
 from PyQt6.QtGui import (
     QAction, QIcon, QFont, QPalette, QColor, QPainter, QPen,
@@ -72,216 +77,217 @@ from seismic_analyzer import (
 # Style Constants
 # =============================================================================
 COLORS = {
-    'P': '#FF4444',
-    'S': '#44AA44', 
-    'Surface': '#4444FF',
-    'Noise': '#888888',
-    'background': '#1a1a2e',
-    'surface': '#16213e',
-    'primary': '#0f3460',
-    'accent': '#e94560',
-    'text': '#eaeaea',
-    'success': '#4CAF50',
-    'warning': '#FF9800',
-    'error': '#f44336'
+    'P': '#6366F1',      # Indigo 500
+    'S': '#10B981',      # Emerald 500
+    'Surface': '#F59E0B', # Amber 500
+    'p_wave': '#6366F1',
+    's_wave': '#10B981',
+    'surface_wave': '#F59E0B',
+    'Noise': '#94A3B8',   # Slate 400
+    'background': '#0F172A', # Slate 900
+    'surface': '#1E293B',    # Slate 800
+    'border': '#334155',     # Slate 700
+    'primary': '#6366F1',    # Indigo 500
+    'primary_hover': '#818CF8', # Indigo 400
+    'accent': '#F43F5E',     # Rose 500
+    'text': '#F1F5F9',       # Slate 100
+    'text_muted': '#94A3B8', # Slate 400
+    'success': '#10B981',    # Emerald 500
+    'warning': '#F59E0B',    # Amber 500
+    'error': '#EF4444'       # Red 500
 }
 
-DARK_STYLESHEET = """
-QMainWindow {
-    background-color: #1a1a2e;
-}
-QWidget {
-    background-color: #1a1a2e;
-    color: #eaeaea;
-    font-family: 'Segoe UI', Arial, sans-serif;
-}
-QGroupBox {
-    border: 2px solid #0f3460;
-    border-radius: 8px;
-    margin-top: 12px;
-    padding-top: 10px;
-    font-weight: bold;
+DARK_STYLESHEET = f"""
+QMainWindow {{
+    background-color: {COLORS['background']};
+}}
+QWidget {{
+    background-color: {COLORS['background']};
+    color: {COLORS['text']};
+    font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
     font-size: 13px;
-}
-QGroupBox::title {
+}}
+QGroupBox {{
+    border: 1px solid {COLORS['border']};
+    border-radius: 12px;
+    margin-top: 20px;
+    padding-top: 15px;
+    background-color: {COLORS['surface']};
+}}
+QGroupBox::title {{
     subcontrol-origin: margin;
-    left: 10px;
-    padding: 0 5px;
-    color: #e94560;
-}
-QPushButton {
-    background-color: #0f3460;
-    color: #eaeaea;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 20px;
-    font-size: 13px;
+    left: 15px;
+    padding: 0 10px;
+    color: {COLORS['primary_hover']};
     font-weight: bold;
-}
-QPushButton:hover {
-    background-color: #1a4a7a;
-}
-QPushButton:pressed {
-    background-color: #e94560;
-}
-QPushButton:disabled {
-    background-color: #333;
-    color: #666;
-}
-QPushButton#startButton {
-    background-color: #4CAF50;
-}
-QPushButton#startButton:hover {
-    background-color: #45a049;
-}
-QPushButton#stopButton {
-    background-color: #f44336;
-}
-QPushButton#stopButton:hover {
-    background-color: #da190b;
-}
-QLabel {
-    color: #eaeaea;
-}
-QLabel#titleLabel {
-    font-size: 24px;
-    font-weight: bold;
-    color: #e94560;
-}
-QLabel#statusLabel {
     font-size: 14px;
-    padding: 5px;
-}
-QProgressBar {
-    border: 2px solid #0f3460;
-    border-radius: 5px;
+}}
+QPushButton {{
+    background-color: {COLORS['primary']};
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-weight: 600;
+}}
+QPushButton:hover {{
+    background-color: {COLORS['primary_hover']};
+}}
+QPushButton:pressed {{
+    background-color: {COLORS['accent']};
+    padding-top: 11px;
+    padding-bottom: 9px;
+}}
+QPushButton:disabled {{
+    background-color: #334155;
+    color: #64748b;
+}}
+QPushButton#startButton {{
+    background-color: {COLORS['success']};
+}}
+QPushButton#startButton:hover {{
+    background-color: #34d399;
+}}
+QPushButton#stopButton {{
+    background-color: {COLORS['error']};
+}}
+QPushButton#stopButton:hover {{
+    background-color: #f87171;
+}}
+QProgressBar {{
+    border: 1px solid {COLORS['border']};
+    border-radius: 6px;
     text-align: center;
-    background-color: #16213e;
-}
-QProgressBar::chunk {
-    background-color: #e94560;
-    border-radius: 3px;
-}
-QTextEdit {
-    background-color: #16213e;
-    border: 1px solid #0f3460;
+    background-color: {COLORS['background']};
+    height: 12px;
+}}
+QProgressBar::chunk {{
+    background-color: {COLORS['primary']};
     border-radius: 5px;
-    padding: 5px;
-    font-family: 'Consolas', monospace;
-}
-QListWidget {
-    background-color: #16213e;
-    border: 1px solid #0f3460;
-    border-radius: 5px;
-}
-QListWidget::item {
+}}
+QTextEdit, QListWidget, QTableWidget {{
+    background-color: {COLORS['background']};
+    border: 1px solid {COLORS['border']};
+    border-radius: 8px;
     padding: 8px;
-    border-bottom: 1px solid #0f3460;
-}
-QListWidget::item:selected {
-    background-color: #0f3460;
-}
-QTableWidget {
-    background-color: #16213e;
-    border: 1px solid #0f3460;
-    gridline-color: #0f3460;
-}
-QTableWidget::item {
-    padding: 5px;
-}
-QHeaderView::section {
-    background-color: #0f3460;
-    color: #eaeaea;
-    padding: 8px;
+}}
+QHeaderView::section {{
+    background-color: {COLORS['surface']};
+    color: {COLORS['text_muted']};
+    padding: 12px;
     border: none;
+    border-bottom: 2px solid {COLORS['border']};
     font-weight: bold;
-}
-QTabWidget::pane {
-    border: 2px solid #0f3460;
-    border-radius: 5px;
-    background-color: #16213e;
-}
-QTabBar::tab {
-    background-color: #0f3460;
-    color: #eaeaea;
-    padding: 10px 20px;
-    margin-right: 2px;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-}
-QTabBar::tab:selected {
-    background-color: #e94560;
-}
-QComboBox {
-    background-color: #16213e;
-    border: 1px solid #0f3460;
-    border-radius: 5px;
+}}
+QTabWidget::pane {{
+    border: none;
+    background-color: {COLORS['background']};
+}}
+QTabBar::tab {{
+    background-color: transparent;
+    color: {COLORS['text_muted']};
+    padding: 12px 24px;
+    margin-right: 4px;
+    border-bottom: 3px solid transparent;
+    font-weight: 600;
+}}
+QTabBar::tab:hover {{
+    color: {COLORS['text']};
+    background-color: {COLORS['surface']};
+    border-radius: 8px;
+}}
+QTabBar::tab:selected {{
+    color: {COLORS['primary_hover']};
+    border-bottom: 3px solid {COLORS['primary']};
+    background-color: {COLORS['surface']};
+    border-radius: 8px 8px 0 0;
+}}
+QComboBox {{
+    background-color: {COLORS['surface']};
+    border: 1px solid {COLORS['border']};
+    border-radius: 8px;
+    padding: 8px 12px;
+}}
+QComboBox::drop-down {{
+    border: none;
+    width: 30px;
+}}
+QSpinBox, QDoubleSpinBox {{
+    background-color: {COLORS['surface']};
+    border: 1px solid {COLORS['border']};
+    border-radius: 8px;
     padding: 8px;
-}
-QComboBox::drop-down {
+}}
+QSlider::groove:horizontal {{
     border: none;
-}
-QSpinBox, QDoubleSpinBox {
-    background-color: #16213e;
-    border: 1px solid #0f3460;
-    border-radius: 5px;
-    padding: 5px;
-}
-QSlider::groove:horizontal {
-    border: 1px solid #0f3460;
-    height: 8px;
-    background: #16213e;
-    border-radius: 4px;
-}
-QSlider::handle:horizontal {
-    background: #e94560;
-    border: none;
+    height: 6px;
+    background: {COLORS['border']};
+    border-radius: 3px;
+}}
+QSlider::handle:horizontal {{
+    background: {COLORS['primary']};
+    border: 2px solid {COLORS['background']};
     width: 18px;
-    margin: -5px 0;
+    height: 18px;
+    margin: -7px 0;
     border-radius: 9px;
-}
-QStatusBar {
-    background-color: #0f3460;
-    color: #eaeaea;
-}
-QToolBar {
-    background-color: #16213e;
-    border: none;
-    spacing: 10px;
-    padding: 5px;
-}
-QMenuBar {
-    background-color: #16213e;
-}
-QMenuBar::item {
-    padding: 8px 15px;
-}
-QMenuBar::item:selected {
-    background-color: #0f3460;
-}
-QMenu {
-    background-color: #16213e;
-    border: 1px solid #0f3460;
-}
-QMenu::item {
-    padding: 8px 30px;
-}
-QMenu::item:selected {
-    background-color: #0f3460;
-}
-QScrollBar:vertical {
-    background-color: #16213e;
-    width: 12px;
-    border-radius: 6px;
-}
-QScrollBar::handle:vertical {
-    background-color: #0f3460;
-    border-radius: 6px;
-    min-height: 30px;
-}
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+}}
+QSlider::handle:horizontal:hover {{
+    background: {COLORS['primary_hover']};
+}}
+QScrollBar:vertical {{
+    background-color: transparent;
+    width: 10px;
+    margin: 0;
+}}
+QScrollBar::handle:vertical {{
+    background-color: {COLORS['border']};
+    border-radius: 5px;
+    min-height: 40px;
+}}
+QScrollBar::handle:vertical:hover {{
+    background-color: {COLORS['text_muted']};
+}}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
     height: 0px;
-}
+}}
+QStatusBar {{
+    background-color: {COLORS['surface']};
+    color: {COLORS['text_muted']};
+    border-top: 1px solid {COLORS['border']};
+}}
+QToolBar {{
+    background-color: {COLORS['surface']};
+    border-bottom: 1px solid {COLORS['border']};
+    spacing: 12px;
+    padding: 8px;
+}}
+QMenuBar {{
+    background-color: {COLORS['surface']};
+    border-bottom: 1px solid {COLORS['border']};
+}}
+QMenuBar::item {{
+    padding: 8px 16px;
+    background-color: transparent;
+}}
+QMenuBar::item:selected {{
+    background-color: {COLORS['border']};
+    border-radius: 6px;
+}}
+QMenu {{
+    background-color: {COLORS['surface']};
+    border: 1px solid {COLORS['border']};
+    border-radius: 8px;
+    padding: 5px;
+}}
+QMenu::item {{
+    padding: 8px 24px;
+    border-radius: 4px;
+}}
+QMenu::item:selected {{
+    background-color: {COLORS['primary']};
+    color: white;
+}}
 """
 
 
@@ -384,6 +390,128 @@ class RealtimeWorker(QThread):
         self.finished.emit()
 
 
+class TcpStreamWorker(QThread):
+    """Worker thread that receives seismic data from a TCP stream server."""
+    detection = pyqtSignal(object, float)  # WaveDetection, timestamp
+    sample_update = pyqtSignal(np.ndarray)  # Latest samples for visualization
+    status_update = pyqtSignal(str)
+    finished = pyqtSignal()
+    
+    def __init__(self, analyzer: SeismicAnalyzer, host: str, port: int):
+        super().__init__()
+        self.analyzer = analyzer
+        self.host = host
+        self.port = port
+        self.is_running = True
+        self.sample_rate = SAMPLE_RATE
+    
+    def stop(self):
+        self.is_running = False
+    
+    def set_speed(self, speed: float):
+        """Speed is controlled server-side for TCP streams; this is a no-op."""
+        pass
+    
+    def _recv_exact(self, sock: socket.socket, n: int) -> bytes:
+        """Receive exactly n bytes from socket."""
+        data = b''
+        while len(data) < n and self.is_running:
+            try:
+                chunk = sock.recv(n - len(data))
+                if not chunk:
+                    raise ConnectionError("Server closed connection")
+                data += chunk
+            except socket.timeout:
+                continue
+        return data
+    
+    def run(self):
+        buffer = deque(maxlen=INPUT_LENGTH * 4)
+        last_detection_time = 0
+        cooldown = 2.0
+        total_samples = 0
+        
+        self.status_update.emit(f"Connecting to {self.host}:{self.port}...")
+        
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(3.0)
+            sock.connect((self.host, self.port))
+            sock.settimeout(2.0)
+            self.status_update.emit(f"🟢 Connected to stream at {self.host}:{self.port}")
+        except (ConnectionRefusedError, socket.timeout, OSError) as e:
+            error_msg = f"❌ Connection failed: {e}"
+            if "111" in str(e) or "refused" in str(e).lower():
+                error_msg += "\n💡 TIP: Is the 'seismic_stream_server.py' running?"
+            self.status_update.emit(error_msg)
+            self.finished.emit()
+            return
+        
+        try:
+            while self.is_running:
+                # Read frame header: 4 bytes int32 LE (sample count)
+                header = self._recv_exact(sock, 4)
+                if len(header) < 4:
+                    break
+                
+                n_samples = struct.unpack('<i', header)[0]
+                
+                if n_samples <= 0 or n_samples > 100000:
+                    continue  # Skip invalid frames
+                
+                # Read sample data: N * 4 bytes float32 LE
+                payload = self._recv_exact(sock, n_samples * 4)
+                if len(payload) < n_samples * 4:
+                    break
+                
+                samples = np.frombuffer(payload, dtype=np.float32).copy()
+                buffer.extend(samples)
+                total_samples += len(samples)
+                current_time = total_samples / self.sample_rate
+                
+                # Emit samples for visualization
+                if len(buffer) >= INPUT_LENGTH:
+                    vis_data = np.array(list(buffer)[-INPUT_LENGTH * 2:], dtype=np.float32)
+                    self.sample_update.emit(vis_data)
+                
+                # Run earthquake detection
+                if len(buffer) >= INPUT_LENGTH:
+                    if current_time - last_detection_time >= cooldown:
+                        segment = np.array(list(buffer)[-INPUT_LENGTH:], dtype=np.float32)
+                        is_eq, confidence = self.analyzer.detect_earthquake(segment)
+                        
+                        if is_eq:
+                            wave_type, wave_conf = self.analyzer.classify_wave(segment)
+                            magnitude = None
+                            if wave_type == 'P':
+                                magnitude, _ = self.analyzer.predict_magnitude(segment)
+                            
+                            det = WaveDetection(
+                                wave_type=wave_type,
+                                confidence=wave_conf,
+                                start_sample=total_samples - INPUT_LENGTH,
+                                end_sample=total_samples,
+                                start_time=current_time - INPUT_LENGTH / self.sample_rate,
+                                end_time=current_time,
+                                magnitude=magnitude
+                            )
+                            self.detection.emit(det, current_time)
+                            last_detection_time = current_time
+        
+        except ConnectionError:
+            self.status_update.emit("⚠ Stream disconnected")
+        except Exception as e:
+            self.status_update.emit(f"⚠ Stream error: {e}")
+        finally:
+            try:
+                sock.close()
+            except Exception:
+                pass
+        
+        self.status_update.emit("Stream monitoring complete")
+        self.finished.emit()
+
+
 # =============================================================================
 # Custom Widgets
 # =============================================================================
@@ -391,17 +519,24 @@ class WaveformCanvas(FigureCanvas):
     """Canvas for displaying seismic waveforms."""
     
     def __init__(self, parent=None):
-        self.fig = Figure(figsize=(10, 4), facecolor=COLORS['surface'])
+        # Use the Slate 900 background for the figure
+        self.fig = Figure(figsize=(10, 4), facecolor=COLORS['background'])
         super().__init__(self.fig)
         self.setParent(parent)
         
         self.ax = self.fig.add_subplot(111)
-        self.ax.set_facecolor(COLORS['surface'])
-        self.ax.tick_params(colors=COLORS['text'])
-        self.ax.spines['bottom'].set_color(COLORS['primary'])
-        self.ax.spines['top'].set_color(COLORS['primary'])
-        self.ax.spines['left'].set_color(COLORS['primary'])
-        self.ax.spines['right'].set_color(COLORS['primary'])
+        self.ax.set_facecolor(COLORS['background'])
+        
+        # Style ticks and labels with muted slate
+        self.ax.tick_params(colors=COLORS['text_muted'], labelsize=9)
+        
+        # Style spines to blend in
+        for spine in self.ax.spines.values():
+            spine.set_edgecolor(COLORS['border'])
+            spine.set_linewidth(1)
+        
+        # Add a subtle grid
+        self.ax.grid(True, linestyle='--', alpha=0.1, color=COLORS['text'])
         
         self.fig.tight_layout()
     
@@ -409,24 +544,41 @@ class WaveformCanvas(FigureCanvas):
                       detections: List[WaveDetection] = None, title: str = ""):
         """Plot waveform with optional wave detections."""
         self.ax.clear()
-        self.ax.set_facecolor(COLORS['surface'])
+        self.ax.set_facecolor(COLORS['background'])
         
         time_axis = np.arange(len(data)) / sample_rate
-        self.ax.plot(time_axis, data, color=COLORS['text'], linewidth=0.5, alpha=0.8)
+        # Use a vibrant Indigo for the waveform
+        self.ax.plot(time_axis, data, color=COLORS['primary_hover'], linewidth=0.8, alpha=0.9)
         
         if detections:
             for d in detections:
                 if d.wave_type != 'Noise':
+                    # Determine color
+                    color_key = d.wave_type.lower()
+                    if 'p' in color_key: color = COLORS['p_wave']
+                    elif 's' in color_key: color = COLORS['s_wave']
+                    elif 'surface' in color_key: color = COLORS['surface_wave']
+                    else: color = 'gray'
+                    
+                    # Arrival line (vibrant)
+                    self.ax.axvline(x=d.start_time, color=color, linestyle='--', linewidth=1.5, alpha=0.8)
+                    
+                    # Highlight span
                     self.ax.axvspan(
                         d.start_time, d.end_time,
-                        alpha=0.3, color=COLORS.get(d.wave_type, 'gray')
+                        alpha=0.15, color=color, label=d.wave_type
                     )
+                    
+                    # Label above the wave
+                    y_max = np.max(data)
+                    self.ax.text(d.start_time, y_max * 0.9, f" {d.wave_type}", 
+                                color=color, fontweight='bold', fontsize=8)
         
-        self.ax.set_xlabel('Time (seconds)', color=COLORS['text'])
-        self.ax.set_ylabel('Amplitude', color=COLORS['text'])
-        self.ax.set_title(title, color=COLORS['accent'], fontweight='bold')
-        self.ax.tick_params(colors=COLORS['text'])
-        self.ax.grid(True, alpha=0.2, color=COLORS['primary'])
+        self.ax.set_xlabel('Time (seconds)', color=COLORS['text_muted'], fontweight='bold')
+        self.ax.set_ylabel('Amplitude', color=COLORS['text_muted'], fontweight='bold')
+        self.ax.grid(True, linestyle='--', alpha=0.1, color=COLORS['text'])
+        self.ax.set_title(title, color=COLORS['primary_hover'], fontweight='bold', pad=15)
+        self.ax.tick_params(colors=COLORS['text_muted'], labelsize=9)
         
         self.fig.tight_layout()
         self.draw()
@@ -458,92 +610,172 @@ class DetectionCard(QFrame):
         self.setup_ui()
     
     def setup_ui(self):
-        self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
+        # Determine color based on wave type
+        color_key = self.detection.wave_type.lower()
+        if 'p' in color_key: color = COLORS['p_wave']
+        elif 's' in color_key: color = COLORS['s_wave']
+        elif 'surface' in color_key: color = COLORS['surface_wave']
+        else: color = COLORS['text_muted']
+
         self.setStyleSheet(f"""
             QFrame {{
                 background-color: {COLORS['surface']};
-                border: 2px solid {COLORS.get(self.detection.wave_type, COLORS['primary'])};
+                border-left: 4px solid {color};
                 border-radius: 10px;
-                padding: 10px;
+                margin-bottom: 5px;
             }}
-        """)
-        
-        layout = QVBoxLayout(self)
-        
-        # Wave type header
-        header = QLabel(f"🌊 {self.detection.wave_type}-wave")
-        header.setStyleSheet(f"""
-            font-size: 18px;
-            font-weight: bold;
-            color: {COLORS.get(self.detection.wave_type, COLORS['text'])};
-        """)
-        layout.addWidget(header)
-        
-        # Confidence
-        conf_label = QLabel(f"Confidence: {self.detection.confidence:.1%}")
-        layout.addWidget(conf_label)
-        
-        # Time range
-        time_label = QLabel(f"Time: {self.detection.start_time:.2f}s - {self.detection.end_time:.2f}s")
-        layout.addWidget(time_label)
-        
-        # Magnitude (if P-wave)
-        if self.detection.magnitude is not None:
-            mag_label = QLabel(f"Est. Magnitude: {self.detection.magnitude:.1f} ± 0.5")
-            mag_label.setStyleSheet("color: #FF9800; font-weight: bold;")
-            layout.addWidget(mag_label)
-
-
-class AlertWidget(QFrame):
-    """Widget for displaying earthquake alerts."""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setup_ui()
-        self.hide()
-    
-    def setup_ui(self):
-        self.setStyleSheet(f"""
-            QFrame {{
-                background-color: {COLORS['error']};
-                border-radius: 10px;
-                padding: 15px;
+            QFrame:hover {{
+                background-color: #2d3748;
             }}
         """)
         
         layout = QHBoxLayout(self)
+        layout.setContentsMargins(15, 12, 15, 12)
+        
+        # Info Column
+        info_layout = QVBoxLayout()
+        
+        type_label = QLabel(self.detection.wave_type.upper())
+        type_label.setStyleSheet(f"font-weight: 900; font-size: 14px; color: {color};")
+        info_layout.addWidget(type_label)
+        
+        time_range = QLabel(f"⏱ Arrival: {self.detection.start_time:.2f}s")
+        time_range.setStyleSheet(f"color: {COLORS['text']}; font-size: 13px; font-weight: 600;")
+        info_layout.addWidget(time_range)
+        
+        layout.addLayout(info_layout)
+        layout.addStretch()
+        
+        # Details Column
+        details_layout = QVBoxLayout()
+        details_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        
+        conf_label = QLabel(f"Confidence: {self.detection.confidence:.1%}")
+        conf_label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 11px;")
+        details_layout.addWidget(conf_label)
+        
+        if self.detection.magnitude is not None:
+            mag_label = QLabel(f"M {self.detection.magnitude:.1f}")
+            mag_label.setStyleSheet(f"color: {COLORS['warning']}; font-weight: 900; font-size: 14px;")
+            details_layout.addWidget(mag_label)
+            
+        layout.addLayout(details_layout)
+
+
+class AlertWidget(QFrame):
+    """Floating toast notification for earthquake alerts."""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setup_ui()
+        
+        # Opacity effect for animation
+        self.opacity_effect = QGraphicsOpacityEffect(self)
+        self.setGraphicsEffect(self.opacity_effect)
+        
+        # Animations
+        self.anim = QPropertyAnimation(self.opacity_effect, b"opacity")
+        self.anim.setDuration(400)
+    
+    def setup_ui(self):
+        self.container = QFrame(self)
+        self.container.setStyleSheet(f"""
+            QFrame {{
+                background-color: {COLORS['surface']};
+                border: 2px solid {COLORS['accent']};
+                border-radius: 16px;
+                padding: 15px;
+            }}
+        """)
+        
+        container_layout = QHBoxLayout(self.container)
+        container_layout.setContentsMargins(20, 15, 20, 15)
+        
+        # Main layout for the widget
+        self.widget_layout = QVBoxLayout(self)
+        self.widget_layout.setContentsMargins(0, 0, 0, 0)
+        self.widget_layout.addWidget(self.container)
         
         # Alert icon
-        icon_label = QLabel("🚨")
-        icon_label.setStyleSheet("font-size: 32px;")
-        layout.addWidget(icon_label)
+        icon_label = QLabel("⚡")
+        icon_label.setStyleSheet(f"font-size: 28px; color: {COLORS['accent']};")
+        container_layout.addWidget(icon_label)
         
         # Alert text
         self.text_label = QLabel("EARTHQUAKE DETECTED!")
-        self.text_label.setStyleSheet("""
-            font-size: 20px;
-            font-weight: bold;
-            color: white;
+        self.text_label.setStyleSheet(f"""
+            font-size: 18px;
+            font-weight: 800;
+            color: {COLORS['text']};
+            letter-spacing: 0.5px;
         """)
-        layout.addWidget(self.text_label)
+        container_layout.addWidget(self.text_label)
         
-        layout.addStretch()
+        container_layout.addSpacing(20)
         
         # Dismiss button
         dismiss_btn = QPushButton("Dismiss")
-        dismiss_btn.clicked.connect(self.hide)
-        layout.addWidget(dismiss_btn)
+        dismiss_btn.setFixedWidth(100)
+        dismiss_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLORS['accent']};
+                border-radius: 8px;
+                padding: 8px;
+                font-size: 12px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS['primary_hover']};
+            }}
+        """)
+        dismiss_btn.clicked.connect(self.hide_toast)
+        container_layout.addWidget(dismiss_btn)
     
     def show_alert(self, wave_type: str, confidence: float, magnitude: float = None):
-        """Show alert with detection details."""
+        """Show floating alert with detection details."""
         text = f"🚨 EARTHQUAKE: {wave_type}-wave detected ({confidence:.1%})"
         if magnitude is not None:
             text += f" | Magnitude: {magnitude:.1f}"
         self.text_label.setText(text)
+        
+        # Position at bottom right of parent
+        if self.parent():
+            # Get the parent's global position
+            parent_pos = self.parent().mapToGlobal(self.parent().rect().topLeft())
+            parent_rect = self.parent().rect()
+            self.adjustSize()
+            
+            x = parent_pos.x() + parent_rect.width() - self.width() - 40
+            y = parent_pos.y() + parent_rect.height() - self.height() - 40
+            self.move(x, y)
+        
         self.show()
+        try:
+            self.anim.finished.disconnect()
+        except:
+            pass
+            
+        self.anim.setStartValue(self.opacity_effect.opacity())
+        self.anim.setEndValue(1.0)
+        self.anim.start()
         
         # Auto-hide after 10 seconds
-        QTimer.singleShot(10000, self.hide)
+        QTimer.singleShot(10000, self.hide_toast)
+        
+    def hide_toast(self):
+        if not self.isVisible():
+            return
+            
+        try:
+            self.anim.finished.disconnect()
+        except:
+            pass
+            
+        self.anim.finished.connect(self.hide)
+        self.anim.setStartValue(self.opacity_effect.opacity())
+        self.anim.setEndValue(0.0)
+        self.anim.start()
 
 
 # =============================================================================
@@ -567,7 +799,6 @@ class EarthquakeDetectorApp(QMainWindow):
         # Setup UI
         self.setup_ui()
         self.setup_menu()
-        self.setup_toolbar()
         self.setup_statusbar()
         
         # Load AI models
@@ -582,15 +813,8 @@ class EarthquakeDetectorApp(QMainWindow):
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(10, 10, 10, 10)
         
-        # Alert widget (hidden by default)
-        self.alert_widget = AlertWidget()
-        main_layout.addWidget(self.alert_widget)
-        
-        # Title
-        title_label = QLabel("🌍 Earthquake Detection System")
-        title_label.setObjectName("titleLabel")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(title_label)
+        # Alert widget (floating toast)
+        self.alert_widget = AlertWidget(self)
         
         # Tab widget
         self.tab_widget = QTabWidget()
@@ -648,23 +872,56 @@ class EarthquakeDetectorApp(QMainWindow):
         splitter.addWidget(waveform_group)
         
         # Detection results
-        results_group = QGroupBox("🎯 Detection Results")
-        results_layout = QVBoxLayout(results_group)
+        results_group = QGroupBox("🎯 Detection Analysis")
+        results_main_layout = QHBoxLayout(results_group)
+        results_main_layout.setContentsMargins(15, 20, 15, 15)
+        results_main_layout.setSpacing(20)
         
-        self.result_summary = QLabel("Analyze a file to see results")
+        # Left Window: Earthquake Event Summary
+        summary_frame = QFrame()
+        summary_frame.setStyleSheet(f"background-color: {COLORS['background']}; border-radius: 12px; border: 1px solid {COLORS['border']};")
+        summary_layout = QVBoxLayout(summary_frame)
+        
+        summary_title = QLabel("EARTHQUAKE EVENT SUMMARY")
+        summary_title.setStyleSheet(f"color: {COLORS['primary']}; font-weight: 900; font-size: 14px; letter-spacing: 1px;")
+        summary_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        summary_layout.addWidget(summary_title)
+        
+        self.result_summary = QLabel("Analyze a file to see earthquake metadata")
         self.result_summary.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.result_summary.setStyleSheet("font-size: 16px; padding: 20px;")
-        results_layout.addWidget(self.result_summary)
+        self.result_summary.setStyleSheet("font-size: 14px; color: #94a3b8;")
+        self.result_summary.setWordWrap(True)
+        summary_layout.addWidget(self.result_summary, stretch=1)
+        
+        results_main_layout.addWidget(summary_frame, stretch=1)
+        
+        # Right Window: All Detected Waves
+        waves_frame = QFrame()
+        waves_frame.setStyleSheet(f"background-color: {COLORS['background']}; border-radius: 12px; border: 1px solid {COLORS['border']};")
+        waves_layout = QVBoxLayout(waves_frame)
+        
+        waves_title = QLabel("PHASES & DETECTIONS")
+        waves_title.setStyleSheet(f"color: {COLORS['primary']}; font-weight: 900; font-size: 14px; letter-spacing: 1px;")
+        waves_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        waves_layout.addWidget(waves_title)
         
         # Detections scroll area
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("background: transparent;")
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         
         self.detections_widget = QWidget()
-        self.detections_layout = QHBoxLayout(self.detections_widget)
+        self.detections_layout = QVBoxLayout(self.detections_widget) # Vertical for list
+        self.detections_layout.setSpacing(10)
+        self.detections_layout.addStretch()
         scroll.setWidget(self.detections_widget)
-        results_layout.addWidget(scroll)
+        waves_layout.addWidget(scroll)
+        
+        results_main_layout.addWidget(waves_frame, stretch=1)
+        
+        layout.addWidget(results_group)
         
         splitter.addWidget(results_group)
         splitter.setSizes([500, 300])
@@ -685,8 +942,33 @@ class EarthquakeDetectorApp(QMainWindow):
         # Source selection
         control_layout.addWidget(QLabel("Source:"))
         self.source_combo = QComboBox()
-        self.source_combo.addItems(["Load from file", "Simulated data"])
+        self.source_combo.addItems(["Load from file", "Simulated data", "TCP Stream"])
+        self.source_combo.currentTextChanged.connect(self._on_source_changed)
         control_layout.addWidget(self.source_combo)
+        
+        # TCP connection settings (hidden by default)
+        self.tcp_host_label = QLabel("Host:")
+        self.tcp_host_input = QComboBox()
+        self.tcp_host_input.setEditable(True)
+        self.tcp_host_input.addItems(["localhost", "127.0.0.1"])
+        self.tcp_host_input.setCurrentText("localhost")
+        self.tcp_host_input.setMaximumWidth(150)
+        self.tcp_port_label = QLabel("Port:")
+        self.tcp_port_input = QSpinBox()
+        self.tcp_port_input.setRange(1024, 65535)
+        self.tcp_port_input.setValue(9100)
+        self.tcp_port_input.setMaximumWidth(80)
+        
+        control_layout.addWidget(self.tcp_host_label)
+        control_layout.addWidget(self.tcp_host_input)
+        control_layout.addWidget(self.tcp_port_label)
+        control_layout.addWidget(self.tcp_port_input)
+        
+        # Initially hide TCP controls
+        self.tcp_host_label.hide()
+        self.tcp_host_input.hide()
+        self.tcp_port_label.hide()
+        self.tcp_port_input.hide()
         
         self.load_source_btn = QPushButton("Load Source")
         self.load_source_btn.clicked.connect(self.load_realtime_source)
@@ -723,27 +1005,72 @@ class EarthquakeDetectorApp(QMainWindow):
         
         layout.addWidget(control_group)
         
+        # Splitter for Waveform and Detections
+        realtime_splitter = QSplitter(Qt.Orientation.Vertical)
+        
         # Real-time waveform
         waveform_group = QGroupBox("📡 Live Waveform")
         waveform_layout = QVBoxLayout(waveform_group)
-        
         self.realtime_canvas = WaveformCanvas()
         waveform_layout.addWidget(self.realtime_canvas)
+        realtime_splitter.addWidget(waveform_group)
         
-        layout.addWidget(waveform_group)
+        # Phase Tracking & History
+        tracking_group = QGroupBox("⚡ Active Event Tracking")
+        tracking_main_layout = QHBoxLayout(tracking_group)
         
-        # Detection log
-        log_group = QGroupBox("📋 Detection Log")
+        # Left Side: Phase Status (P, S, Surface)
+        self.phase_status_frame = QFrame()
+        self.phase_status_frame.setStyleSheet(f"background-color: {COLORS['surface']}; border-radius: 12px; border: 1px solid {COLORS['border']};")
+        self.phase_status_frame.setFixedWidth(300)
+        phase_status_layout = QVBoxLayout(self.phase_status_frame)
+        
+        phase_status_title = QLabel("PHASE ARRIVALS")
+        phase_status_title.setStyleSheet(f"color: {COLORS['primary']}; font-weight: 900; font-size: 12px; letter-spacing: 1px;")
+        phase_status_layout.addWidget(phase_status_title)
+        
+        # Phase items
+        self.p_arrival_label = QLabel("P-Wave: --")
+        self.s_arrival_label = QLabel("S-Wave: --")
+        self.surface_arrival_label = QLabel("Surface: --")
+        
+        for label in [self.p_arrival_label, self.s_arrival_label, self.surface_arrival_label]:
+            label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 14px; font-weight: bold; padding: 10px; background: {COLORS['background']}; border-radius: 6px; margin-top: 5px;")
+            phase_status_layout.addWidget(label)
+        
+        phase_status_layout.addStretch()
+        tracking_main_layout.addWidget(self.phase_status_frame)
+        
+        # Right Side: Detection history (vertical list)
+        self.realtime_scroll = QScrollArea()
+        self.realtime_scroll.setWidgetResizable(True)
+        self.realtime_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.realtime_scroll.setStyleSheet("background: transparent;")
+        
+        self.realtime_cards_widget = QWidget()
+        self.realtime_cards_layout = QVBoxLayout(self.realtime_cards_widget)
+        self.realtime_cards_layout.setSpacing(8)
+        self.realtime_cards_layout.addStretch()
+        self.realtime_scroll.setWidget(self.realtime_cards_widget)
+        tracking_main_layout.addWidget(self.realtime_scroll)
+        
+        realtime_splitter.addWidget(tracking_group)
+        realtime_splitter.setSizes([600, 300])
+        
+        layout.addWidget(realtime_splitter)
+        
+        # Detection log (text)
+        log_group = QGroupBox("📋 Detailed Log")
         log_layout = QVBoxLayout(log_group)
         
         self.detection_log = QTextEdit()
         self.detection_log.setReadOnly(True)
-        self.detection_log.setMaximumHeight(200)
+        self.detection_log.setMaximumHeight(150)
         log_layout.addWidget(self.detection_log)
         
         # Clear log button
         clear_btn = QPushButton("Clear Log")
-        clear_btn.clicked.connect(lambda: self.detection_log.clear())
+        clear_btn.clicked.connect(self.clear_realtime_history)
         log_layout.addWidget(clear_btn)
         
         layout.addWidget(log_group)
@@ -885,29 +1212,7 @@ class EarthquakeDetectorApp(QMainWindow):
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
     
-    def setup_toolbar(self):
-        """Setup the toolbar."""
-        toolbar = QToolBar("Main Toolbar")
-        toolbar.setIconSize(QSize(24, 24))
-        self.addToolBar(toolbar)
-        
-        # Open action
-        open_action = QAction("📂 Open", self)
-        open_action.triggered.connect(self.browse_file)
-        toolbar.addAction(open_action)
-        
-        # Analyze action
-        analyze_action = QAction("🔍 Analyze", self)
-        analyze_action.triggered.connect(self.analyze_file)
-        toolbar.addAction(analyze_action)
-        
-        toolbar.addSeparator()
-        
-        # Export action
-        export_action = QAction("💾 Export", self)
-        export_action.triggered.connect(lambda: self.export_results("json"))
-        toolbar.addAction(export_action)
-    
+
     def setup_statusbar(self):
         """Setup the status bar."""
         self.statusbar = QStatusBar()
@@ -1018,33 +1323,64 @@ class EarthquakeDetectorApp(QMainWindow):
         # Update result summary
         if result.is_earthquake:
             summary = f"""
-            <h2 style='color: {COLORS["error"]};'>🚨 EARTHQUAKE DETECTED</h2>
-            <p><b>Confidence:</b> {result.earthquake_confidence:.1%}</p>
-            """
-            if result.estimated_magnitude:
-                summary += f"<p><b>Estimated Magnitude:</b> {result.estimated_magnitude:.1f} ± 0.5</p>"
-            if result.p_wave_arrival:
-                summary += f"<p><b>P-wave Arrival:</b> {result.p_wave_arrival:.2f}s</p>"
-            if result.s_wave_arrival:
-                summary += f"<p><b>S-wave Arrival:</b> {result.s_wave_arrival:.2f}s</p>"
-            if result.surface_wave_arrival:
-                summary += f"<p><b>Surface Wave Arrival:</b> {result.surface_wave_arrival:.2f}s</p>"
+            <div style='margin-bottom: 20px;'>
+                <h1 style='color: {COLORS["accent"]}; margin: 0; font-size: 24px;'>🚨 EARTHQUAKE DETECTED</h1>
+                <p style='color: #94a3b8; font-size: 14px;'>Event confirmed by AI analysis engine.</p>
+            </div>
             
-            # Show alert
-            if self.auto_alert_check.isChecked():
-                self.alert_widget.show_alert(
-                    "P" if result.p_wave_arrival else "S" if result.s_wave_arrival else "Surface",
-                    result.earthquake_confidence,
-                    result.estimated_magnitude
-                )
+            <div style='background-color: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155;'>
+                <table style='width: 100%;'>
+                    <tr>
+                        <td style='color: #94a3b8;'>Confidence</td>
+                        <td style='text-align: right; color: {COLORS["success"]}; font-weight: 800; font-size: 18px;'>{result.earthquake_confidence:.1%}</td>
+                    </tr>
+                    <tr><td colspan='2'><hr style='border: 0; border-top: 1px solid #334155;'></td></tr>
+            """
+            
+            if result.estimated_magnitude:
+                summary += f"""
+                    <tr>
+                        <td style='color: #94a3b8;'>Estimated Magnitude</td>
+                        <td style='text-align: right; color: {COLORS["warning"]}; font-weight: 900; font-size: 24px;'>{result.estimated_magnitude:.1f} M<sub>w</sub></td>
+                    </tr>
+                    <tr><td colspan='2'><hr style='border: 0; border-top: 1px solid #334155;'></td></tr>
+                """
+            
+            summary += f"""
+                    <tr>
+                        <td style='color: #94a3b8;'>P-wave Arrival</td>
+                        <td style='text-align: right; color: {COLORS["p_wave"]}; font-weight: bold;'>{result.p_wave_arrival:.2f}s</td>
+                    </tr>
+                    <tr>
+                        <td style='color: #94a3b8;'>S-wave Arrival</td>
+                        <td style='text-align: right; color: {COLORS["s_wave"]}; font-weight: bold;'>{result.s_wave_arrival:.2f}s</td>
+                    </tr>
+                    <tr>
+                        <td style='color: #94a3b8;'>Surface Wave</td>
+                        <td style='text-align: right; color: {COLORS["surface_wave"]}; font-weight: bold;'>{result.surface_wave_arrival:.2f}s</td>
+                    </tr>
+                </table>
+            </div>
+            """
         else:
             summary = f"""
-            <h2 style='color: {COLORS["success"]};'>✅ No Earthquake Detected</h2>
-            <p>The analyzed signal appears to be noise.</p>
+            <div style='text-align: center; padding: 40px;'>
+                <div style='font-size: 48px; margin-bottom: 20px;'>✅</div>
+                <h2 style='color: {COLORS["success"]}; margin: 0;'>No Earthquake Detected</h2>
+                <p style='color: #94a3b8; font-size: 14px;'>Signal classified as background noise.</p>
+            </div>
             """
         
-        summary += f"<p><b>Processing Time:</b> {result.processing_time:.3f}s</p>"
+        summary += f"<div style='margin-top: 20px; text-align: center; color: #64748b; font-size: 11px;'>Processing time: {result.processing_time:.3f}s</div>"
         self.result_summary.setText(summary)
+        
+        # Show alert if configured
+        if result.is_earthquake and self.auto_alert_check.isChecked():
+            self.alert_widget.show_alert(
+                "P" if result.p_wave_arrival else "S" if result.s_wave_arrival else "Surface",
+                result.earthquake_confidence,
+                result.estimated_magnitude
+            )
         
         # Update detections cards
         self.update_detection_cards(result.detections)
@@ -1098,9 +1434,24 @@ class EarthquakeDetectorApp(QMainWindow):
         self.analyze_btn.setEnabled(True)
         QMessageBox.critical(self, "Analysis Error", f"Error analyzing file:\n{error_message}")
     
+    def _on_source_changed(self, text: str):
+        """Show/hide TCP controls based on source selection."""
+        is_tcp = (text == "TCP Stream")
+        self.tcp_host_label.setVisible(is_tcp)
+        self.tcp_host_input.setVisible(is_tcp)
+        self.tcp_port_label.setVisible(is_tcp)
+        self.tcp_port_input.setVisible(is_tcp)
+        # For TCP, load_source just validates; for others, it loads data
+        if is_tcp:
+            self.load_source_btn.setText("Connect")
+        else:
+            self.load_source_btn.setText("Load Source")
+    
     def load_realtime_source(self):
         """Load data source for real-time monitoring."""
-        if self.source_combo.currentText() == "Load from file":
+        source = self.source_combo.currentText()
+        
+        if source == "Load from file":
             filepath, _ = QFileDialog.getOpenFileName(
                 self,
                 "Select Source File",
@@ -1111,15 +1462,29 @@ class EarthquakeDetectorApp(QMainWindow):
             if filepath:
                 try:
                     self.realtime_data, self.realtime_sr = self.analyzer.load_file(filepath)
+                    self.realtime_source_type = "file"
                     self.start_btn.setEnabled(True)
                     self.statusbar.showMessage(f"Loaded source: {Path(filepath).name}", 3000)
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Failed to load file:\n{str(e)}")
+        
+        elif source == "TCP Stream":
+            # For TCP, we just mark it ready; actual connection happens on start
+            self.realtime_source_type = "tcp"
+            self.tcp_stream_host = self.tcp_host_input.currentText().strip()
+            self.tcp_stream_port = self.tcp_port_input.value()
+            self.start_btn.setEnabled(True)
+            self.statusbar.showMessage(
+                f"TCP stream configured: {self.tcp_stream_host}:{self.tcp_stream_port} "
+                f"– press Start to connect", 5000
+            )
+        
         else:
             # Generate simulated data
             duration = 60  # seconds
             self.realtime_sr = SAMPLE_RATE
             self.realtime_data = np.random.randn(int(duration * SAMPLE_RATE)).astype(np.float32) * 0.1
+            self.realtime_source_type = "simulated"
             self.start_btn.setEnabled(True)
             self.statusbar.showMessage("Loaded simulated noise data", 3000)
     
@@ -1132,25 +1497,64 @@ class EarthquakeDetectorApp(QMainWindow):
     
     def start_monitoring(self):
         """Start real-time monitoring."""
-        if not hasattr(self, 'realtime_data'):
-            return
+        source_type = getattr(self, 'realtime_source_type', None)
         
-        self.start_btn.setEnabled(False)
-        self.stop_btn.setEnabled(True)
-        self.load_source_btn.setEnabled(False)
-        
-        # Create worker
-        self.realtime_worker = RealtimeWorker(
-            self.analyzer, self.realtime_data, self.realtime_sr
-        )
-        self.realtime_worker.set_speed(self.speed_slider.value() / 10.0)
-        self.realtime_worker.detection.connect(self.handle_realtime_detection)
-        self.realtime_worker.sample_update.connect(self.update_realtime_plot)
-        self.realtime_worker.status_update.connect(lambda s: self.statusbar.showMessage(s))
-        self.realtime_worker.finished.connect(self.monitoring_finished)
-        self.realtime_worker.start()
-        
-        self.detection_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] Monitoring started...")
+        if source_type == "tcp":
+            # Use TCP stream worker
+            host = getattr(self, 'tcp_stream_host', 'localhost')
+            port = getattr(self, 'tcp_stream_port', 9100)
+            
+            self.start_btn.setEnabled(False)
+            self.stop_btn.setEnabled(True)
+            self.load_source_btn.setEnabled(False)
+            
+            self.realtime_worker = TcpStreamWorker(
+                self.analyzer, host, port
+            )
+            self.realtime_sr = SAMPLE_RATE
+            self.realtime_worker.detection.connect(self.handle_realtime_detection)
+            self.realtime_worker.sample_update.connect(self.update_realtime_plot)
+            self.realtime_worker.status_update.connect(self._handle_stream_status)
+            self.realtime_worker.finished.connect(self.monitoring_finished)
+            # Reset phase status labels
+            self.p_arrival_label.setText("P-Wave: --")
+            self.s_arrival_label.setText("S-Wave: --")
+            self.surface_arrival_label.setText("Surface: --")
+            self.p_arrival_label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 14px; font-weight: bold; padding: 10px; background: {COLORS['background']}; border-radius: 6px; margin-top: 5px;")
+            self.s_arrival_label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 14px; font-weight: bold; padding: 10px; background: {COLORS['background']}; border-radius: 6px; margin-top: 5px;")
+            self.surface_arrival_label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 14px; font-weight: bold; padding: 10px; background: {COLORS['background']}; border-radius: 6px; margin-top: 5px;")
+            
+            self.realtime_worker.start()
+            
+            self.detection_log.append(
+                f"[{datetime.now().strftime('%H:%M:%S')}] "
+                f"Connecting to TCP stream at {host}:{port}..."
+            )
+        else:
+            # File-based or simulated monitoring
+            if not hasattr(self, 'realtime_data'):
+                return
+            
+            self.start_btn.setEnabled(False)
+            self.stop_btn.setEnabled(True)
+            self.load_source_btn.setEnabled(False)
+            
+            self.realtime_worker = RealtimeWorker(
+                self.analyzer, self.realtime_data, self.realtime_sr
+            )
+            self.realtime_worker.set_speed(self.speed_slider.value() / 10.0)
+            self.realtime_worker.detection.connect(self.handle_realtime_detection)
+            self.realtime_worker.sample_update.connect(self.update_realtime_plot)
+            self.realtime_worker.status_update.connect(lambda s: self.statusbar.showMessage(s))
+            self.realtime_worker.finished.connect(self.monitoring_finished)
+            self.realtime_worker.start()
+            
+            self.detection_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] Monitoring started...")
+    
+    def _handle_stream_status(self, message: str):
+        """Handle TCP stream status updates in both statusbar and detection log."""
+        self.statusbar.showMessage(message)
+        self.detection_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
     
     def stop_monitoring(self):
         """Stop real-time monitoring."""
@@ -1165,21 +1569,74 @@ class EarthquakeDetectorApp(QMainWindow):
         self.detection_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] Monitoring stopped")
     
     def handle_realtime_detection(self, detection: WaveDetection, timestamp: float):
-        """Handle real-time detection."""
+        """Handle real-time detection and update the phase-specific UI components."""
         time_str = datetime.now().strftime('%H:%M:%S')
-        log_msg = f"[{time_str}] 🚨 {detection.wave_type}-wave detected ({detection.confidence:.1%})"
+        wave_type = detection.wave_type
+        color_key = wave_type.lower()
+        
+        # 1. Update the dedicated Phase Status readouts
+        if 'p' in color_key:
+            color = COLORS['p_wave']
+            self.p_arrival_label.setText(f"P-Wave: {timestamp:.2f}s")
+            self.p_arrival_label.setStyleSheet(f"color: {color}; font-size: 14px; font-weight: 900; padding: 10px; background: {COLORS['surface']}; border: 1px solid {color}; border-radius: 6px; margin-top: 5px;")
+        elif 's' in color_key:
+            color = COLORS['s_wave']
+            self.s_arrival_label.setText(f"S-Wave: {timestamp:.2f}s")
+            self.s_arrival_label.setStyleSheet(f"color: {color}; font-size: 14px; font-weight: 900; padding: 10px; background: {COLORS['surface']}; border: 1px solid {color}; border-radius: 6px; margin-top: 5px;")
+        elif 'surface' in color_key:
+            color = COLORS['surface_wave']
+            self.surface_arrival_label.setText(f"Surface: {timestamp:.2f}s")
+            self.surface_arrival_label.setStyleSheet(f"color: {color}; font-size: 14px; font-weight: 900; padding: 10px; background: {COLORS['surface']}; border: 1px solid {color}; border-radius: 6px; margin-top: 5px;")
+        else:
+            color = COLORS['text_muted']
+
+        # 2. Log the detection with thematic coloring
+        log_msg = f"[{time_str}] 🚨 {wave_type}-wave detected ({detection.confidence:.1%})"
         if detection.magnitude:
             log_msg += f" | Magnitude: {detection.magnitude:.1f}"
+        self.detection_log.append(f'<span style="color: {color}; font-weight: bold;">{log_msg}</span>')
         
-        self.detection_log.append(f'<span style="color: {COLORS[detection.wave_type]};">{log_msg}</span>')
-        
-        # Show alert
+        # 3. Show floating toast notification
         if self.auto_alert_check.isChecked():
-            self.alert_widget.show_alert(
-                detection.wave_type,
-                detection.confidence,
-                detection.magnitude
-            )
+            self.alert_widget.show_alert(wave_type, detection.confidence, detection.magnitude)
+        
+        # 4. Add visual card to the vertical detections list
+        card = DetectionCard(detection)
+        self.realtime_cards_layout.insertWidget(0, card) # Most recent at top
+        
+        # Limit history cards to 15 for performance
+        if self.realtime_cards_layout.count() > 16: # +1 for stretch
+            item = self.realtime_cards_layout.takeAt(self.realtime_cards_layout.count() - 2)
+            if item and item.widget():
+                item.widget().deleteLater()
+        
+        # 5. Record in the main results table
+        source_name = f"Live: {self.source_combo.currentText()}"
+        row = self.results_table.rowCount()
+        self.results_table.insertRow(row)
+        self.results_table.setItem(row, 0, QTableWidgetItem(source_name))
+        self.results_table.setItem(row, 1, QTableWidgetItem("Yes"))
+        self.results_table.setItem(row, 2, QTableWidgetItem(f"{detection.confidence:.1%}"))
+        self.results_table.setItem(row, 3, QTableWidgetItem(f"{detection.magnitude:.1f}" if detection.magnitude else "-"))
+        
+        # Initialize wave columns
+        for i in range(4, 7):
+            self.results_table.setItem(row, i, QTableWidgetItem("-"))
+        
+        # Put timestamp in the correct wave column
+        col_map = {"P": 4, "S": 5, "Surface": 6}
+        if wave_type in col_map:
+            self.results_table.setItem(row, col_map[wave_type], QTableWidgetItem(f"{timestamp:.2f}s"))
+            
+        self.statusbar.showMessage(f"Real-time {wave_type}-wave detected!", 3000)
+    
+    def clear_realtime_history(self):
+        """Clear the real-time detection history (cards and log)."""
+        self.detection_log.clear()
+        while self.realtime_cards_layout.count():
+            child = self.realtime_cards_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
     
     def update_realtime_plot(self, data: np.ndarray):
         """Update real-time waveform plot."""

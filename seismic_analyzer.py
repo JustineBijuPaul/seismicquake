@@ -33,9 +33,10 @@ from collections import deque
 from datetime import datetime
 import threading
 
-# Suppress warnings
+# Suppress warnings and TensorFlow noise
 warnings.filterwarnings('ignore')
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress all except fatal errors
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0' # Reduce more log noise
 
 # Import TensorFlow
 import tensorflow as tf
