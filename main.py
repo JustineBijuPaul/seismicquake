@@ -1346,18 +1346,22 @@ class EarthquakeDetectorApp(QMainWindow):
                     <tr><td colspan='2'><hr style='border: 0; border-top: 1px solid #334155;'></td></tr>
                 """
             
+            p_wave_str = f"{result.p_wave_arrival:.2f}s" if result.p_wave_arrival is not None else "N/A"
+            s_wave_str = f"{result.s_wave_arrival:.2f}s" if result.s_wave_arrival is not None else "N/A"
+            surface_wave_str = f"{result.surface_wave_arrival:.2f}s" if result.surface_wave_arrival is not None else "N/A"
+
             summary += f"""
                     <tr>
                         <td style='color: #94a3b8;'>P-wave Arrival</td>
-                        <td style='text-align: right; color: {COLORS["p_wave"]}; font-weight: bold;'>{result.p_wave_arrival:.2f}s</td>
+                        <td style='text-align: right; color: {COLORS["p_wave"]}; font-weight: bold;'>{p_wave_str}</td>
                     </tr>
                     <tr>
                         <td style='color: #94a3b8;'>S-wave Arrival</td>
-                        <td style='text-align: right; color: {COLORS["s_wave"]}; font-weight: bold;'>{result.s_wave_arrival:.2f}s</td>
+                        <td style='text-align: right; color: {COLORS["s_wave"]}; font-weight: bold;'>{s_wave_str}</td>
                     </tr>
                     <tr>
                         <td style='color: #94a3b8;'>Surface Wave</td>
-                        <td style='text-align: right; color: {COLORS["surface_wave"]}; font-weight: bold;'>{result.surface_wave_arrival:.2f}s</td>
+                        <td style='text-align: right; color: {COLORS["surface_wave"]}; font-weight: bold;'>{surface_wave_str}</td>
                     </tr>
                 </table>
             </div>
